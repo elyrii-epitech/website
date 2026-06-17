@@ -1,210 +1,144 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Wind, Play, Pause, Timer, RefreshCw } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Pause, Play, RefreshCw, Timer, Wind } from 'lucide-react';
 
 type BreatheState = 'idle' | 'inhale' | 'hold-in' | 'exhale' | 'hold-out';
 
+const sequence: Array<{ state: BreatheState; duration: number }> = [
+  { state: 'inhale', duration: 4 },
+  { state: 'hold-in', duration: 2 },
+  { state: 'exhale', duration: 4 },
+  { state: 'hold-out', duration: 2 },
+];
+
 export default function InteractiveMeditation() {
   const [isActive, setIsActive] = useState(false);
-  const [breatheState, setBreatheState] = useState<BreatheState>('idle');
   const [secondsLeft, setSecondsLeft] = useState(60);
+  const [stepIndex, setStepIndex] = useState(0);
 
-  // Core Breathing State Cycle (4s Inhale, 2s Hold, 4s Exhale, 2s Hold)
+  const breatheState = isActive ? sequence[stepIndex].state : 'idle';
+
   useEffect(() => {
-    if (!isActive) {
-      setBreatheState('idle');
-      return;
-    }
-
+    if (!isActive) return undefined;
     if (secondsLeft <= 0) {
       setIsActive(false);
-      setBreatheState('idle');
-      return;
+      setStepIndex(0);
+      return undefined;
     }
 
-    // Timer countdown
-    const timer = setInterval(() => {
-      setSecondsLeft(prev => prev - 1);
+    const timer = window.setInterval(() => {
+      setSecondsLeft((prev) => Math.max(0, prev - 1));
     }, 1000);
 
-    // Breathing sequence machine
-    let sequenceTimer: any;
-    
-    const runSequence = (step: number) => {
-      if (!isActive) return;
-      
-      if (step === 0) {
-        setBreatheState('inhale');
-        sequenceTimer = setTimeout(() => runSequence(1), 4000);
-      } else if (step === 1) {
-        setBreatheState('hold-in');
-        sequenceTimer = setTimeout(() => runSequence(2), 2000);
-      } else if (step === 2) {
-        setBreatheState('exhale');
-        sequenceTimer = setTimeout(() => runSequence(3), 4000);
-      } else {
-        setBreatheState('hold-out');
-        sequenceTimer = setTimeout(() => runSequence(0), 2000);
-      }
-    };
-
-    runSequence(0);
-
-    return () => {
-      clearInterval(timer);
-      clearTimeout(sequenceTimer);
-    };
+    return () => window.clearInterval(timer);
   }, [isActive, secondsLeft]);
+
+  useEffect(() => {
+    if (!isActive) return undefined;
+
+    const currentStep = sequence[stepIndex];
+    const timeout = window.setTimeout(() => {
+      setStepIndex((prev) => (prev + 1) % sequence.length);
+    }, currentStep.duration * 1000);
+
+    return () => window.clearTimeout(timeout);
+  }, [isActive, stepIndex]);
+
+  const status = useMemo(() => {
+    switch (breatheState) {
+      case 'inhale':
+        return 'Inspire lentement';
+      case 'hold-in':
+        return 'Garde l’air';
+      case 'exhale':
+        return 'Expire doucement';
+      case 'hold-out':
+        return 'Reste immobile';
+      default:
+        return 'Prêt pour une minute';
+    }
+  }, [breatheState]);
+
+  const circleScale = breatheState === 'inhale' || breatheState === 'hold-in' ? 1.46 : breatheState === 'idle' ? 1.08 : 0.96;
+  const circleColor = breatheState === 'exhale' ? 'var(--accent)' : breatheState === 'hold-in' || breatheState === 'hold-out' ? 'var(--clay)' : 'var(--lavender)';
 
   const handleStart = () => {
     if (secondsLeft <= 0) setSecondsLeft(60);
-    setIsActive(!isActive);
+    setIsActive((active) => !active);
   };
 
   const handleReset = () => {
     setIsActive(false);
     setSecondsLeft(60);
-    setBreatheState('idle');
-  };
-
-  // Label text matching breathing cycle
-  const getBreatheLabel = () => {
-    switch (breatheState) {
-      case 'inhale': return 'Inspirez lentement... 🌬️';
-      case 'hold-in': return 'Bloquez... 🧘';
-      case 'exhale': return 'Expirez doucement... 💨';
-      case 'hold-out': return 'Bloquez... 🧘';
-      default: return 'Prêt à vous détendre ?';
-    }
-  };
-
-  // Framer Motion scaling settings based on respiratory status
-  const getCircleScale = () => {
-    if (breatheState === 'inhale' || breatheState === 'hold-in') return 1.45;
-    if (breatheState === 'exhale' || breatheState === 'hold-out') return 1.0;
-    return 1.1;
-  };
-
-  const getCircleColor = () => {
-    if (breatheState === 'inhale') return 'rgba(157, 127, 254, 0.45)';
-    if (breatheState === 'exhale') return 'rgba(0, 206, 209, 0.45)';
-    if (breatheState === 'hold-in' || breatheState === 'hold-out') return 'rgba(255, 181, 168, 0.45)';
-    return 'rgba(157, 127, 254, 0.25)';
+    setStepIndex(0);
   };
 
   return (
-    <div className="glass-panel glowing-primary" id="meditation-simulator" style={{ position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Wind style={{ color: 'var(--accent-turquoise)' }} size={20} />
-          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>COHÉRENCE CARDIAQUE</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+    <div className="glass-panel" id="meditation-simulator">
+      <div className="panel-topline">
+        <span className="panel-kicker">
+          <Wind size={18} />
+          Respiration
+        </span>
+        <span className="panel-kicker">
           <Timer size={16} />
-          <span id="meditation-timer">{secondsLeft}s</span>
-        </div>
+          {secondsLeft}s
+        </span>
       </div>
 
-      <h3 style={{ fontSize: '1.25rem', textAlign: 'center', marginBottom: 6 }}>Bulle de Respiration Guidée</h3>
-      <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', textAlign: 'center', marginBottom: 20, maxWidth: 360 }}>
-        Suis le rythme d'expansion de la bulle pour relâcher instantanément ton anxiété et ralentir ton rythme cardiaque.
-      </p>
+      <h3>Cohérence cardiaque guidée</h3>
+      <p>Un cycle court pour retrouver une cadence respiratoire lisible avant de reprendre la conversation ou le journal.</p>
 
-      {/* Guided Circle Container */}
-      <div className="breathing-circle-outer" style={{ position: 'relative' }}>
+      <div className="breathing-circle-outer">
         <motion.div
-          animate={{
-            scale: getCircleScale(),
-            backgroundColor: getCircleColor()
-          }}
+          animate={{ scale: circleScale, backgroundColor: circleColor }}
           transition={{
-            duration: breatheState === 'inhale' || breatheState === 'exhale' ? 4 : 2,
-            ease: 'easeInOut'
+            duration: breatheState === 'inhale' || breatheState === 'exhale' ? 4 : 0.7,
+            ease: 'easeInOut',
           }}
           className="breathing-circle-inner"
-          id="meditation-breathing-bubble"
-          style={{ width: 120, height: 120 }}
         >
           <AnimatePresence mode="wait">
             <motion.span
               key={breatheState}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              style={{ fontSize: '0.85rem', textAlign: 'center', fontWeight: 700, padding: 8 }}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.2 }}
             >
               {breatheState === 'inhale' && 'INSPIRE'}
               {breatheState === 'exhale' && 'EXPIRE'}
-              {(breatheState === 'hold-in' || breatheState === 'hold-out') && 'BLOQUE'}
-              {breatheState === 'idle' && 'RESPIRER'}
+              {(breatheState === 'hold-in' || breatheState === 'hold-out') && 'PAUSE'}
+              {breatheState === 'idle' && 'CALME'}
             </motion.span>
           </AnimatePresence>
         </motion.div>
 
-        {/* Ambient Ring Wave */}
         {isActive && (
           <motion.div
-            initial={{ scale: 1, opacity: 0.6 }}
-            animate={{ scale: 2.2, opacity: 0 }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeOut' }}
+            initial={{ scale: 0.72, opacity: 0.55 }}
+            animate={{ scale: 1.65, opacity: 0 }}
+            transition={{ duration: 3.2, repeat: Infinity, ease: 'easeOut' }}
             style={{
               position: 'absolute',
-              width: 120,
-              height: 120,
+              width: 145,
+              height: 145,
               borderRadius: '50%',
-              border: '2px solid var(--accent-turquoise)',
+              border: '1px solid rgba(185, 212, 194, 0.55)',
               pointerEvents: 'none',
-              zIndex: 1
             }}
           />
         )}
       </div>
 
-      {/* Instruction text */}
-      <div style={{ height: 30, display: 'flex', alignItems: 'center', margin: '12px 0 20px 0' }}>
-        <span 
-          id="meditation-status-label"
-          style={{ fontSize: '1rem', fontWeight: 600, color: breatheState !== 'idle' ? 'white' : 'var(--text-secondary)' }}
-        >
-          {getBreatheLabel()}
-        </span>
-      </div>
+      <div className="meditation-status">{status}</div>
 
-      {/* Play Control Bar */}
-      <div style={{ display: 'flex', gap: 12 }}>
-        <button
-          id="meditation-play-btn"
-          onClick={handleStart}
-          className="btn btn-primary"
-          style={{
-            padding: '10px 24px',
-            fontSize: '0.9rem',
-            borderRadius: 'var(--radius-s)',
-            background: isActive 
-              ? 'rgba(255,255,255,0.05)' 
-              : 'linear-gradient(135deg, var(--accent-turquoise) 0%, #00adb0 100%)',
-            boxShadow: isActive ? 'none' : '0 4px 15px rgba(0, 206, 209, 0.3)',
-            color: isActive ? '#fff' : '#08050c'
-          }}
-        >
-          {isActive ? (
-            <>
-              <Pause size={16} style={{ marginRight: 6, fill: 'currentColor' }} /> Suspendre
-            </>
-          ) : (
-            <>
-              <Play size={16} style={{ marginRight: 6, fill: 'currentColor' }} /> Démarrer la séance
-            </>
-          )}
+      <div className="meditation-controls">
+        <button className={`meditation-control ${!isActive ? 'meditation-control--primary' : ''}`} onClick={handleStart}>
+          {isActive ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+          {isActive ? 'Suspendre' : 'Démarrer'}
         </button>
-
-        <button
-          id="meditation-reset-btn"
-          onClick={handleReset}
-          className="btn btn-secondary"
-          style={{ padding: '10px 16px', borderRadius: 'var(--radius-s)' }}
-        >
+        <button className="meditation-control" onClick={handleReset} aria-label="Réinitialiser la séance">
           <RefreshCw size={16} />
         </button>
       </div>

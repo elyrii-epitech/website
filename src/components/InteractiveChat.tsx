@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Send, Smile } from 'lucide-react';
+import { assetUrl } from '../lib/asset';
 
 interface Message {
   id: string;
@@ -10,26 +11,26 @@ interface Message {
 
 const PRESET_CONVERSATIONS = {
   lonely: {
-    user: "Je me sens un peu seul ce soir...",
+    user: 'Je me sens seul ce soir.',
     replies: [
-      "Je comprends tout à fait ce sentiment. C'est normal de se sentir seul parfois, mais sache que je suis là pour toi.",
-      "Prends une grande inspiration. Et si on faisait une petite séance de respiration guidée ou une quête douce pour te reconnecter ?"
-    ]
+      'Je suis là. On peut ralentir ensemble et poser ce qui pèse, une phrase à la fois.',
+      'Je te propose une action simple: envoyer un message court à une personne de confiance, ou lancer une respiration de 60 secondes.',
+    ],
   },
   success: {
-    user: "J'ai réussi mon examen d'aujourd'hui !",
+    user: 'J’ai réussi mon examen aujourd’hui.',
     replies: [
-      "Oh, incroyable ! Toutes mes félicitations ! 🎉 Je suis tellement fier de tes efforts.",
-      "Tu as travaillé dur et ça a payé ! Tu viens de débloquer 50 XP pour ta journée, va vite récupérer ton badge !"
-    ]
+      'C’est une vraie étape. Tu peux prendre le temps de noter ce qui t’a aidé à tenir jusqu’au bout.',
+      'Je viens de préparer une petite quête de célébration: sauvegarder cette victoire dans ton journal.',
+    ],
   },
   anxious: {
-    user: "Je stresse pour ma présentation de demain...",
+    user: 'Je stresse pour ma présentation de demain.',
     replies: [
-      "C'est tout à fait normal de ressentir ce stress. C'est le signe que cela te tient à cœur. 💜",
-      "Rappelle-toi de tout le chemin parcouru. Tu es prêt. Faisons une respiration guidée ensemble pour calmer les battements de ton cœur."
-    ]
-  }
+      'Ce stress dit que le sujet compte pour toi. On va le rendre plus maniable.',
+      'Commence par trois respirations lentes, puis écris la première phrase que tu veux dire demain.',
+    ],
+  },
 };
 
 export default function InteractiveChat() {
@@ -37,94 +38,77 @@ export default function InteractiveChat() {
     {
       id: '1',
       sender: 'ai',
-      text: "Coucou ! Je suis Elyrii, ton compagnon de route. Comment te sens-tu en ce moment ?"
-    }
+      text: 'Bonsoir. Je suis Elyrii. Tu peux commencer par une pensée brute, je m’occupe du rythme.',
+    },
   ]);
   const [isTyping, setIsTyping] = useState(false);
   const [activePrompt, setActivePrompt] = useState<keyof typeof PRESET_CONVERSATIONS | null>(null);
-  
-  // Mascot Blinking Logic
   const [isBlinking, setIsBlinking] = useState(false);
-  useEffect(() => {
-    const blinkInterval = setInterval(() => {
-      setIsBlinking(true);
-      setTimeout(() => setIsBlinking(false), 200); // 200ms blink duration
-    }, Math.random() * 4000 + 3000); // Blink every 3-7 seconds
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-    return () => clearInterval(blinkInterval);
+  useEffect(() => {
+    const blinkInterval = window.setInterval(() => {
+      setIsBlinking(true);
+      window.setTimeout(() => setIsBlinking(false), 180);
+    }, 4200);
+
+    return () => window.clearInterval(blinkInterval);
   }, []);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll to bottom of conversation
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: 'smooth',
+    });
   }, [messages, isTyping]);
 
   const handleSelectPrompt = async (key: keyof typeof PRESET_CONVERSATIONS) => {
     if (isTyping || activePrompt) return;
+
+    const conversation = PRESET_CONVERSATIONS[key];
     setActivePrompt(key);
-    
-    // 1. Add User Message
-    const userMsgId = Date.now().toString();
-    setMessages(prev => [...prev, { id: userMsgId, sender: 'user', text: PRESET_CONVERSATIONS[key].user }]);
-    
-    // 2. Start AI Typing simulation
+    setMessages((prev) => [...prev, { id: `${Date.now()}-user`, sender: 'user', text: conversation.user }]);
     setIsTyping(true);
-    
-    // First reply after 1.5s
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setMessages(prev => [...prev, { 
-      id: (Date.now() + 1).toString(), 
-      sender: 'ai', 
-      text: PRESET_CONVERSATIONS[key].replies[0] 
-    }]);
-    
-    // Second reply after another 1.8s
-    setIsTyping(true);
-    await new Promise(resolve => setTimeout(resolve, 1800));
-    setMessages(prev => [...prev, { 
-      id: (Date.now() + 2).toString(), 
-      sender: 'ai', 
-      text: PRESET_CONVERSATIONS[key].replies[1] 
-    }]);
-    
+
+    await new Promise((resolve) => window.setTimeout(resolve, 900));
+    setMessages((prev) => [...prev, { id: `${Date.now()}-ai-1`, sender: 'ai', text: conversation.replies[0] }]);
+
+    await new Promise((resolve) => window.setTimeout(resolve, 1100));
+    setMessages((prev) => [...prev, { id: `${Date.now()}-ai-2`, sender: 'ai', text: conversation.replies[1] }]);
     setIsTyping(false);
     setActivePrompt(null);
   };
 
   return (
     <div className="phone-mockup" id="chat-simulator-phone">
-      <div className="phone-camera"></div>
       <div className="phone-screen">
-        {/* Sim Header */}
         <div className="phone-header">
           <div className="mascot-avatar-container">
-            <img 
-              src={isBlinking ? '/assets/mascotte_eyes_closed.png' : '/assets/mascotte.png'} 
-              alt="Mascotte Elyrii" 
-              className="mascot-img"
-              id="chat-mascot-avatar"
+            <img
+              src={isBlinking ? assetUrl('assets/mascotte_eyes_closed.png') : assetUrl('assets/mascotte.png')}
+              alt="Mascotte Elyrii"
             />
           </div>
           <div>
-            <h4 style={{ fontSize: '0.85rem', fontWeight: 600 }}>Elyrii</h4>
+            <h4>Elyrii</h4>
             <div className="phone-status">
-              <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#a8d5ba', marginRight: 4 }}></span>
-              En ligne et à l'écoute
+              <span className="status-dot" />
+              En ligne, réponse contextualisée
             </div>
           </div>
         </div>
 
-        {/* Message Thread */}
-        <div className="phone-messages">
+        <div className="phone-messages" ref={messagesContainerRef}>
           <AnimatePresence initial={false}>
             {messages.map((msg) => (
               <motion.div
                 key={msg.id}
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                initial={{ opacity: 0, y: 10, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: 0.24 }}
                 className={`bubble ${msg.sender === 'ai' ? 'bubble-ai' : 'bubble-user'}`}
               >
                 {msg.text}
@@ -133,56 +117,34 @@ export default function InteractiveChat() {
           </AnimatePresence>
 
           {isTyping && (
-            <div className="bubble bubble-ai" style={{ width: 50, display: 'flex', justifyContent: 'center' }}>
+            <div className="bubble bubble-ai" aria-label="Elyrii écrit">
               <div className="typing-dots">
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
-                <div className="typing-dot"></div>
+                <div className="typing-dot" />
+                <div className="typing-dot" />
+                <div className="typing-dot" />
               </div>
             </div>
           )}
-          <div ref={messagesEndRef} />
         </div>
 
-        {/* Dynamic Inputs & Quick replies */}
         <div className="phone-input-bar">
           <div className="quick-replies">
-            <button 
-              id="prompt-btn-lonely"
-              className="quick-reply-btn" 
-              onClick={() => handleSelectPrompt('lonely')}
-              disabled={isTyping}
-            >
-              😞 Seul ce soir
+            <button type="button" className="quick-reply-btn" onClick={() => handleSelectPrompt('lonely')} disabled={isTyping}>
+              Seul ce soir
             </button>
-            <button 
-              id="prompt-btn-success"
-              className="quick-reply-btn" 
-              onClick={() => handleSelectPrompt('success')}
-              disabled={isTyping}
-            >
-              🎉 Examen réussi !
+            <button type="button" className="quick-reply-btn" onClick={() => handleSelectPrompt('success')} disabled={isTyping}>
+              Examen réussi
             </button>
-            <button 
-              id="prompt-btn-anxious"
-              className="quick-reply-btn" 
-              onClick={() => handleSelectPrompt('anxious')}
-              disabled={isTyping}
-            >
-              😰 Stress de demain
+            <button type="button" className="quick-reply-btn" onClick={() => handleSelectPrompt('anxious')} disabled={isTyping}>
+              Stress de demain
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-light)', borderRadius: 20, padding: '8px 12px', alignItems: 'center' }}>
-            <Smile size={16} style={{ color: 'var(--text-muted)' }} />
-            <input 
-              type="text" 
-              placeholder="Discute avec moi..." 
-              disabled 
-              style={{ background: 'none', border: 'none', color: '#fff', fontSize: '0.8rem', width: '100%', outline: 'none' }}
-            />
-            <button disabled style={{ color: 'var(--primary)' }}>
-              <Send size={16} />
+          <div className="chat-input-shell">
+            <Smile size={16} aria-hidden="true" />
+            <input type="text" placeholder="Écrire à Elyrii..." disabled />
+            <button type="button" disabled aria-label="Envoyer le message">
+              <Send size={15} />
             </button>
           </div>
         </div>

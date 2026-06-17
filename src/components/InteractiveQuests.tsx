@@ -11,56 +11,47 @@ interface Quest {
   completed: boolean;
 }
 
-export default function InteractiveQuests() {
-  const [quests, setQuests] = useState<Quest[]>([
-    { id: '1', title: "Faire 5 respirations guidées dans la bulle", category: "Bien-être", xp: 30, completed: false },
-    { id: '2', title: "Rédiger une pensée positive du jour dans ton journal", category: "Journal", xp: 40, completed: false },
-    { id: '3', title: "Parler de ta passion créative avec Elyrii", category: "Social", xp: 50, completed: false }
-  ]);
+const INITIAL_QUESTS: Quest[] = [
+  { id: '1', title: 'Faire une respiration guidée dans la bulle', category: 'Bien-être', xp: 30, completed: false },
+  { id: '2', title: 'Noter une pensée utile dans le journal', category: 'Journal', xp: 40, completed: false },
+  { id: '3', title: 'Parler d’un sujet important avec Elyrii', category: 'Social', xp: 50, completed: false },
+];
 
+export default function InteractiveQuests() {
+  const [quests, setQuests] = useState<Quest[]>(INITIAL_QUESTS);
   const [currentXP, setCurrentXP] = useState(10);
   const [level, setLevel] = useState(1);
   const totalXPRequired = 130;
 
-  const triggerConfetti = () => {
+  const triggerConfetti = (large = false) => {
     confetti({
-      particleCount: 80,
-      spread: 60,
-      origin: { y: 0.8 },
-      colors: ['#9d7ffe', '#ffb5a8', '#a8d5ba'] // Lavender, Peach, Mint
+      particleCount: large ? 120 : 56,
+      spread: large ? 74 : 48,
+      origin: { y: 0.78 },
+      colors: ['#b9d4c2', '#e4ad9f', '#a99af0', '#e6c56d'],
+      disableForReducedMotion: true,
     });
   };
 
   const handleCompleteQuest = (id: string, xp: number) => {
-    const targetQuest = quests.find(q => q.id === id);
+    const targetQuest = quests.find((quest) => quest.id === id);
     if (!targetQuest || targetQuest.completed) return;
 
-    // 1. Mark completed
-    setQuests(prev => prev.map(q => q.id === id ? { ...q, completed: true } : q));
-
-    // 2. Add XP
-    const newXP = currentXP + xp;
-    setCurrentXP(newXP);
-
-    // 3. Fire Confetti
+    const nextXP = currentXP + xp;
+    setQuests((prev) => prev.map((quest) => (quest.id === id ? { ...quest, completed: true } : quest)));
+    setCurrentXP(nextXP);
     triggerConfetti();
 
-    // 4. Check Level Up
-    if (newXP >= totalXPRequired) {
-      setTimeout(() => {
+    if (nextXP >= totalXPRequired && level === 1) {
+      window.setTimeout(() => {
         setLevel(2);
-        confetti({
-          particleCount: 150,
-          spread: 80,
-          origin: { y: 0.6 },
-          colors: ['#9d7ffe', '#ffb5a8', '#a8d5ba', '#00ced1']
-        });
-      }, 800);
+        triggerConfetti(true);
+      }, 500);
     }
   };
 
   const handleReset = () => {
-    setQuests(prev => prev.map(q => ({ ...q, completed: false })));
+    setQuests(INITIAL_QUESTS);
     setCurrentXP(10);
     setLevel(1);
   };
@@ -68,101 +59,59 @@ export default function InteractiveQuests() {
   const progressPercentage = Math.min(100, (currentXP / totalXPRequired) * 100);
 
   return (
-    <div className="glass-panel glowing-primary" id="quest-simulator" style={{ position: 'relative' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Trophy style={{ color: 'var(--accent-peach)' }} size={20} />
-          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>DÉFIS & GAMIFICATION</span>
-        </div>
-        <button 
-          id="quest-reset-btn"
-          onClick={handleReset} 
-          style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem' }}
-        >
-          <RefreshCw size={12} /> Réinitialiser
+    <div className="glass-panel" id="quest-simulator">
+      <div className="panel-topline">
+        <span className="panel-kicker">
+          <Trophy size={18} />
+          Défis
+        </span>
+        <button className="icon-button" onClick={handleReset} aria-label="Réinitialiser les défis">
+          <RefreshCw size={15} />
         </button>
       </div>
 
-      <h3 style={{ fontSize: '1.25rem', marginBottom: 12 }}>Tes objectifs quotidiens</h3>
-      <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 24 }}>
-        En accomplissant ces défis simples, tu gagnes de l'expérience, augmentes ton niveau et débloques des récompenses.
-      </p>
+      <h3>Tes objectifs quotidiens</h3>
+      <p>Des actions assez petites pour être commencées même quand l’énergie est basse.</p>
 
-      {/* Quest Items list */}
-      <div id="quest-list-container" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="quest-list" id="quest-list-container">
         {quests.map((quest) => (
-          <div 
-            key={quest.id} 
-            className={`quest-item ${quest.completed ? 'completed' : ''}`}
-            id={`quest-item-${quest.id}`}
-          >
+          <div key={quest.id} className={`quest-item ${quest.completed ? 'completed' : ''}`}>
             <div className="quest-info">
-              <div className="quest-status-icon">
-                {quest.completed && <Check size={14} />}
-              </div>
+              <div className="quest-status-icon">{quest.completed && <Check size={14} />}</div>
               <div>
-                <div className="quest-title" style={{ color: quest.completed ? 'var(--text-muted)' : '#fff' }}>
-                  {quest.title}
-                </div>
+                <div className="quest-title">{quest.title}</div>
                 <div className="quest-xp">
-                  +{quest.xp} XP • <span style={{ color: 'var(--text-muted)' }}>{quest.category}</span>
+                  +{quest.xp} XP / {quest.category}
                 </div>
               </div>
             </div>
-            
-            {!quest.completed ? (
-              <button
-                id={`quest-complete-btn-${quest.id}`}
-                onClick={() => handleCompleteQuest(quest.id, quest.xp)}
-                className="btn btn-secondary"
-                style={{ padding: '8px 16px', fontSize: '0.8rem', borderRadius: 'var(--radius-s)' }}
-              >
-                <Play size={12} style={{ marginRight: 4, fill: 'currentColor' }} /> Valider
-              </button>
+
+            {quest.completed ? (
+              <span className="mini-label">Validé</span>
             ) : (
-              <span style={{ fontSize: '0.8rem', color: 'var(--accent-mint)', fontWeight: 600 }}>Complété</span>
+              <button className="quest-action" onClick={() => handleCompleteQuest(quest.id, quest.xp)}>
+                <Play size={13} fill="currentColor" />
+                Valider
+              </button>
             )}
           </div>
         ))}
       </div>
 
-      {/* XP Level Bar Progress container */}
       <div className="xp-progress-container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Award size={16} style={{ color: 'var(--primary)' }} />
-            <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Niveau {level}</span>
-          </div>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            {level === 2 ? 'Niveau Max Atteint ! 🎉' : `${currentXP} / ${totalXPRequired} XP`}
+        <div className="xp-meta">
+          <span>
+            <Award size={16} /> Niveau {level}
           </span>
+          <span>{level === 2 ? 'Palier atteint' : `${currentXP} / ${totalXPRequired} XP`}</span>
         </div>
-
         <div className="xp-bar">
-          <div 
-            className="xp-fill" 
-            style={{ width: `${progressPercentage}%` }}
-            id="quest-xp-progress-bar"
-          ></div>
+          <div className="xp-fill" style={{ width: `${progressPercentage}%` }} />
         </div>
 
         {level === 2 && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            style={{
-              marginTop: 16,
-              background: 'rgba(168, 213, 186, 0.1)',
-              border: '1px solid rgba(168, 213, 186, 0.2)',
-              borderRadius: 'var(--radius-s)',
-              padding: '10px 14px',
-              fontSize: '0.8rem',
-              color: 'var(--accent-mint)',
-              textAlign: 'center',
-              fontWeight: 600
-            }}
-          >
-            🎉 Félicitations ! Tu es passé au Niveau 2 ! Tu es sur la bonne voie.
+          <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="level-message">
+            Niveau 2 débloqué. La progression est enregistrée.
           </motion.div>
         )}
       </div>

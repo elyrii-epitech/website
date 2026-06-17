@@ -1,70 +1,57 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, PenTool, Sparkles } from 'lucide-react';
 
 interface MoodConfig {
-  emoji: string;
   label: string;
-  themeClass: string;
   color: string;
   insight: string;
   prompt: string;
   placeholderText: string;
 }
 
-const MOODS: { [key: string]: MoodConfig } = {
+const MOODS: Record<string, MoodConfig> = {
   sad: {
-    emoji: "😭",
-    label: "Très dur",
-    themeClass: "active-peach",
-    color: "var(--accent-peach)",
-    insight: "C'est tout à fait normal d'avoir des jours sombres. Ne sois pas trop dur avec toi-même aujourd'hui.",
-    prompt: "Aujourd'hui, j'ai le droit de me reposer et de ressentir ma tristesse. Demain est un autre jour...",
-    placeholderText: "Quel a été le moment le plus lourd aujourd'hui ? Écris pour te libérer..."
+    label: 'Très dur',
+    color: 'var(--danger)',
+    insight: 'Aujourd’hui peut rester petit. Une seule phrase suffit pour sortir la tension de ta tête.',
+    prompt: 'Aujourd’hui a été lourd. Je peux noter ce qui m’a blessé sans devoir le résoudre tout de suite.',
+    placeholderText: 'Quel moment a demandé le plus d’effort ?',
   },
   down: {
-    emoji: "🙁",
-    label: "Difficile",
-    themeClass: "active-peach",
-    color: "var(--accent-peach)",
-    insight: "Les petits nuages finissent toujours par passer. Quelque chose a-t-il pesé sur ton moral ?",
-    prompt: "Ce n'était pas la meilleure journée, mais j'ai fait de mon mieux et c'est déjà une grande victoire.",
-    placeholderText: "Qu'est-ce qui t'a contrarié aujourd'hui ?"
+    label: 'Difficile',
+    color: 'var(--clay)',
+    insight: 'Ce qui pèse mérite d’être nommé. Elyrii peut ensuite proposer une action douce.',
+    prompt: 'Ce n’était pas simple, mais j’ai tenu. Je veux comprendre ce qui a consommé mon énergie.',
+    placeholderText: 'Qu’est-ce qui a tiré ton moral vers le bas ?',
   },
   neutral: {
-    emoji: "😐",
-    label: "Neutre",
-    themeClass: "active",
-    color: "var(--primary)",
-    insight: "Une journée calme est une excellente occasion de prendre soin de soi et de se recentrer.",
-    prompt: "Une journée ordinaire, reposante, où j'ai pu avancer à mon propre rythme sans pression.",
-    placeholderText: "Raconte brièvement le déroulement de ta journée..."
+    label: 'Neutre',
+    color: 'var(--lavender)',
+    insight: 'Une journée neutre donne de bonnes données: rythme, sommeil, interactions, environnement.',
+    prompt: 'Journée calme. J’ai avancé sans intensité particulière, et je veux garder une trace simple.',
+    placeholderText: 'Raconte le déroulé de ta journée.',
   },
   good: {
-    emoji: "🙂",
-    label: "Bien",
-    themeClass: "active-mint",
-    color: "var(--accent-mint)",
-    insight: "Super ! Prends le temps de savourer cette sensation positive et d'ancrer ce bien-être.",
-    prompt: "Une chouette journée ! J'ai apprécié les petits moments de calme et le contact avec mes proches.",
-    placeholderText: "Quel a été ton petit plaisir aujourd'hui ?"
+    label: 'Bien',
+    color: 'var(--accent)',
+    insight: 'Repérer ce qui aide permet de le reproduire sans forcer.',
+    prompt: 'J’ai ressenti un mieux aujourd’hui. Je veux noter le geste, la personne ou le moment qui a aidé.',
+    placeholderText: 'Quel détail t’a fait du bien ?',
   },
-  awesome: {
-    emoji: "😄",
-    label: "Super !",
-    themeClass: "active-mint",
-    color: "var(--accent-mint)",
-    insight: "Incroyable ! Ta joie est contagieuse. Note ce qui a rendu ce moment si magique pour t'en souvenir !",
-    prompt: "Une journée magique remplie d'énergie positive et de réussites ! Je me sens inspiré !",
-    placeholderText: "Partage cette superbe énergie ! Qu'est-ce qui t'a rendu si heureux ?"
-  }
+  strong: {
+    label: 'Stable',
+    color: 'var(--honey)',
+    insight: 'La stabilité compte aussi. Elle montre les conditions qui soutiennent ton équilibre.',
+    prompt: 'Je me suis senti stable. Je veux garder en mémoire ce qui a rendu cette journée plus solide.',
+    placeholderText: 'Qu’est-ce qui a rendu la journée plus stable ?',
+  },
 };
 
 export default function InteractiveJournal() {
-  const [selectedMoodKey, setSelectedMoodKey] = useState<string>('neutral');
-  const [journalText, setJournalText] = useState<string>('');
-  const [isSaved, setIsSaved] = useState<boolean>(false);
-
+  const [selectedMoodKey, setSelectedMoodKey] = useState('neutral');
+  const [journalText, setJournalText] = useState('');
+  const [isSaved, setIsSaved] = useState(false);
   const currentMood = MOODS[selectedMoodKey];
 
   const handleMoodSelect = (key: string) => {
@@ -74,135 +61,85 @@ export default function InteractiveJournal() {
   };
 
   const handleAutoFill = () => {
-    setJournalText(MOODS[selectedMoodKey].prompt);
+    setJournalText(currentMood.prompt);
+    setIsSaved(false);
   };
 
   const handleSave = () => {
     if (!journalText.trim()) return;
     setIsSaved(true);
-    setTimeout(() => {
-      setIsSaved(false);
-    }, 3000);
+    window.setTimeout(() => setIsSaved(false), 2400);
   };
 
   return (
-    <div className="glass-panel glowing-primary" id="journal-simulator" style={{ position: 'relative', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Calendar style={{ color: currentMood.color }} size={20} />
-          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>JOURNAL DE BORD</span>
-        </div>
-        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Aujourd'hui, 22:00</span>
+    <div className="glass-panel" id="journal-simulator">
+      <div className="panel-topline">
+        <span className="panel-kicker">
+          <Calendar size={18} />
+          Journal
+        </span>
+        <span className="mini-label">Aujourd’hui, 22:00</span>
       </div>
 
-      <h3 style={{ fontSize: '1.25rem', marginBottom: 12 }}>Comment s'est passée ta journée ?</h3>
-      <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 24 }}>
-        Enregistre ton humeur pour obtenir des conseils personnalisés par notre IA et adapter tes quêtes.
-      </p>
+      <h3>Comment s’est passée ta journée ?</h3>
+      <p>Choisis une humeur, puis garde une trace exploitable par le coach et les tendances.</p>
 
-      {/* Mood Select Buttons */}
       <div className="mood-selector" id="mood-selector-container">
         {Object.entries(MOODS).map(([key, config]) => (
           <button
             key={key}
-            id={`mood-btn-${key}`}
-            className={`mood-btn ${selectedMoodKey === key ? `active ${config.themeClass}` : ''}`}
+            className={`mood-btn ${selectedMoodKey === key ? 'active' : ''}`}
             onClick={() => handleMoodSelect(key)}
+            style={{ color: config.color }}
           >
-            <span className="mood-emoji">{config.emoji}</span>
+            <span className="mood-glyph" aria-hidden="true" />
             <span className="mood-label">{config.label}</span>
           </button>
         ))}
       </div>
 
-      {/* Empathetic Insight Card */}
       <AnimatePresence mode="wait">
         <motion.div
           key={selectedMoodKey}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
+          exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.2 }}
-          style={{
-            background: 'rgba(255,255,255,0.02)',
-            borderLeft: `3px solid ${currentMood.color}`,
-            borderRadius: '4px 8px 8px 4px',
-            padding: '16px',
-            marginBottom: 24,
-            fontSize: '0.9rem',
-            color: 'var(--text-secondary)',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: 12
-          }}
+          className="insight-card"
+          style={{ borderLeftColor: currentMood.color }}
         >
-          <Sparkles size={18} style={{ color: currentMood.color, flexShrink: 0, marginTop: 2 }} />
+          <Sparkles size={18} style={{ color: currentMood.color, flex: '0 0 auto' }} />
           <span>{currentMood.insight}</span>
         </motion.div>
       </AnimatePresence>
 
-      {/* Journal Entry Input Box */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <PenTool size={14} /> ÉCRITURE LIBRE
-          </span>
-          <button
-            id="journal-suggest-btn"
-            onClick={handleAutoFill}
-            style={{ fontSize: '0.75rem', color: currentMood.color, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}
-          >
-            💡 Inspirer mon écriture
-          </button>
-        </div>
-        
-        <textarea
-          id="journal-textarea"
-          rows={3}
-          value={journalText}
-          onChange={(e) => setJournalText(e.target.value)}
-          placeholder={currentMood.placeholderText}
-          style={{
-            width: '100%',
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid var(--border-light)',
-            borderRadius: 'var(--radius-s)',
-            padding: '12px 16px',
-            color: '#fff',
-            fontSize: '0.9rem',
-            outline: 'none',
-            resize: 'none',
-            transition: 'var(--transition-fast)'
-          }}
-          onFocus={(e) => e.target.style.borderColor = currentMood.color}
-          onBlur={(e) => e.target.style.borderColor = 'var(--border-light)'}
-        />
+      <div className="journal-actions">
+        <span className="panel-kicker">
+          <PenTool size={15} />
+          Écriture libre
+        </span>
+        <button className="journal-suggest" onClick={handleAutoFill}>
+          <Sparkles size={14} />
+          Proposer une amorce
+        </button>
+      </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
-          <button
-            id="journal-save-btn"
-            onClick={handleSave}
-            disabled={!journalText.trim()}
-            className="btn"
-            style={{
-              padding: '10px 20px',
-              fontSize: '0.85rem',
-              borderRadius: 'var(--radius-s)',
-              background: journalText.trim() 
-                ? (selectedMoodKey === 'sad' || selectedMoodKey === 'down' 
-                  ? 'linear-gradient(135deg, var(--accent-peach) 0%, #f79c8d 100%)' 
-                  : selectedMoodKey === 'neutral' 
-                    ? 'linear-gradient(135deg, var(--primary) 0%, #7e5cf5 100%)' 
-                    : 'linear-gradient(135deg, var(--accent-mint) 0%, #8ac5a0 100%)')
-                : 'rgba(255,255,255,0.05)',
-              color: selectedMoodKey === 'sad' || selectedMoodKey === 'down' || selectedMoodKey === 'good' || selectedMoodKey === 'awesome' ? '#08050c' : '#fff',
-              opacity: journalText.trim() ? 1 : 0.5,
-              cursor: journalText.trim() ? 'pointer' : 'not-allowed'
-            }}
-          >
-            {isSaved ? '✓ Enregistré !' : 'Enregistrer ma pensée'}
-          </button>
-        </div>
+      <textarea
+        className="journal-textarea"
+        rows={4}
+        value={journalText}
+        onChange={(event) => {
+          setJournalText(event.target.value);
+          setIsSaved(false);
+        }}
+        placeholder={currentMood.placeholderText}
+      />
+
+      <div className="journal-actions">
+        <span className="mini-label">{journalText.trim().length || 0} caractères</span>
+        <button className="save-button" onClick={handleSave} disabled={!journalText.trim()}>
+          {isSaved ? 'Pensée enregistrée' : 'Enregistrer'}
+        </button>
       </div>
     </div>
   );
