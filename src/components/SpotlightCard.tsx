@@ -26,6 +26,7 @@ export default function SpotlightCard({
   spotlightSize = 320,
 }: SpotlightCardProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const rectRef = useRef<{ left: number; top: number; width: number; height: number } | null>(null);
   const mouseX = useMotionValue(0.5);
   const mouseY = useMotionValue(0.5);
 
@@ -39,14 +40,18 @@ export default function SpotlightCard({
   });
 
   const handleMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
+    if (!rectRef.current) {
+      const el = ref.current;
+      if (!el) return;
+      rectRef.current = el.getBoundingClientRect();
+    }
+    const rect = rectRef.current;
     mouseX.set((event.clientX - rect.left) / rect.width);
     mouseY.set((event.clientY - rect.top) / rect.height);
   };
 
   const handleLeave = () => {
+    rectRef.current = null;
     mouseX.set(0.5);
     mouseY.set(0.5);
   };

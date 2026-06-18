@@ -25,15 +25,19 @@ export default function MagneticButton({
   type = 'button',
 }: MagneticButtonProps) {
   const ref = useRef<HTMLButtonElement>(null);
+  const rectRef = useRef<{ left: number; top: number; width: number; height: number } | null>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const springX = useSpring(x, { stiffness: 180, damping: 14, mass: 0.4 });
   const springY = useSpring(y, { stiffness: 180, damping: 14, mass: 0.4 });
 
   const handleMove = (event: React.PointerEvent<HTMLButtonElement>) => {
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
+    if (!rectRef.current) {
+      const el = ref.current;
+      if (!el) return;
+      rectRef.current = el.getBoundingClientRect();
+    }
+    const rect = rectRef.current;
     const relX = event.clientX - (rect.left + rect.width / 2);
     const relY = event.clientY - (rect.top + rect.height / 2);
     x.set((relX / rect.width) * strength);
@@ -41,6 +45,7 @@ export default function MagneticButton({
   };
 
   const handleLeave = () => {
+    rectRef.current = null;
     x.set(0);
     y.set(0);
   };

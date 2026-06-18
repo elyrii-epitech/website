@@ -103,13 +103,25 @@ export default function MascotModel() {
       );
 
       const clock = new THREE.Clock();
-      renderer.setAnimationLoop(() => {
+      const tick = () => {
         const delta = clock.getDelta();
         mixer?.update(delta);
         renderer.render(scene, camera);
-      });
+      };
+
+      const intersectionObserver = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) {
+          clock.getDelta(); // reset clock delta to avoid sudden time leaps
+          renderer.setAnimationLoop(tick);
+        } else {
+          renderer.setAnimationLoop(null);
+        }
+      }, { threshold: 0.02 });
+
+      intersectionObserver.observe(container);
 
       cleanupScene = () => {
+        intersectionObserver.disconnect();
         resizeObserver.disconnect();
         renderer.setAnimationLoop(null);
         mixer?.stopAllAction();
