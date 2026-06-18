@@ -34,5 +34,8 @@ dist-ssr/
 .env.test.local
 .env.production.local
 
+# Local tooling artifacts
+.playwright-mcp/
+
 # TypeScript
 *.tsbuildinfo
