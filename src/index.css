@@ -27,6 +27,12 @@
   --radius-lg: 28px;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-soft: cubic-bezier(0.45, 0, 0.15, 1);
+  --blob-top: 0;
+  --blob-left: 0;
+  --blob-size: 0;
+  --blob-glow: transparent;
+  --blob-color: transparent;
+  --blob-duration: 24s;
 }
 
 * {
@@ -46,7 +52,7 @@ body {
   width: 100%;
   background: #161312;
   color: var(--ink);
-  font-family: var(--font-body);
+  font-family: var(--font-body), sans-serif;
   line-height: 1.5;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -119,12 +125,12 @@ body::before {
 
 .living-bg__blob {
   position: absolute;
-  top: var(--blob-top);
-  left: var(--blob-left);
-  width: var(--blob-size);
-  height: var(--blob-size);
+  top: var(--blob-top, 0);
+  left: var(--blob-left, 0);
+  width: var(--blob-size, 0);
+  height: var(--blob-size, 0);
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 40%, var(--blob-glow), var(--blob-color) 45%, transparent 70%);
+  background: radial-gradient(circle at 40% 40%, var(--blob-glow, transparent), var(--blob-color, transparent) 45%, transparent 70%);
   filter: blur(50px);
   opacity: 0.85;
   animation: blobBreathe var(--blob-duration, 24s) var(--ease-soft) infinite alternate;
@@ -172,7 +178,7 @@ body::before {
   right: 0;
   height: 3px;
   z-index: 30;
-  transform-origin: 0%;
+  transform-origin: 0;
   background: linear-gradient(90deg, var(--lavender-deep), var(--lavender), var(--accent));
   box-shadow: 0 0 12px rgba(169, 154, 240, 0.4);
 }
@@ -224,6 +230,12 @@ img {
 .button.magnetic-button,
 .store-button.magnetic-button {
   display: inline-flex;
+}
+
+.brand--button {
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 /* ============ SPOTLIGHT CARD ============ */
@@ -319,7 +331,7 @@ img {
   min-height: 50px;
   padding: 0 12px 0 8px;
   border-radius: 999px;
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-weight: 760;
   letter-spacing: 0;
   transition: background 220ms var(--ease), transform 220ms var(--ease);
@@ -507,7 +519,7 @@ img {
   gap: 9px;
   margin: 0 0 17px;
   color: var(--accent);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -525,7 +537,7 @@ p {
 h1,
 h2,
 h3 {
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   letter-spacing: 0;
   line-height: 0.98;
 }
@@ -679,7 +691,7 @@ p {
 .signal strong {
   margin-bottom: 8px;
   color: var(--paper);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 1rem;
 }
 
@@ -841,7 +853,7 @@ p {
 
 .mini-label {
   color: var(--ink-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.11em;
@@ -1051,7 +1063,7 @@ p {
 }
 
 .screen-grid strong {
-  font-family: var(--font-display);
+  font-family: var(--font-display), sans-serif;
   font-size: 2rem;
   line-height: 1;
 }
@@ -1142,7 +1154,7 @@ p {
   display: inline-block;
   margin-bottom: 34px;
   color: var(--accent);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 0.78rem;
   font-weight: 800;
 }
@@ -1267,7 +1279,7 @@ p {
 
 .module-row span {
   color: var(--ink-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 0.78rem;
 }
 
@@ -1389,7 +1401,7 @@ p {
 
 .join-action small {
   color: var(--ink-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 0.68rem;
   font-weight: 760;
   letter-spacing: 0.08em;
@@ -1427,7 +1439,7 @@ p {
 
 .tech-row span {
   color: var(--accent);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1535,6 +1547,22 @@ p {
   text-align: right;
 }
 
+.footer__meta {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.footer__meta a {
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.footer__meta a:hover {
+  color: var(--ink);
+}
+
 .reveal {
   animation: riseIn 700ms var(--ease) both;
 }
@@ -1584,7 +1612,7 @@ p {
   align-items: center;
   gap: 9px;
   color: var(--ink-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 0.72rem;
   font-weight: 750;
   letter-spacing: 0.11em;
@@ -1989,7 +2017,7 @@ p {
 
 .quest-xp {
   color: var(--ink-muted);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 0.72rem;
 }
 
@@ -2054,7 +2082,7 @@ p {
   place-items: center;
   border-radius: 999px;
   color: #10100f;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), monospace;
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.09em;
@@ -2313,6 +2341,10 @@ p {
   .footer {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .footer__meta {
+    justify-items: start;
   }
 
   .footer p {

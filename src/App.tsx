@@ -173,15 +173,15 @@ export default function App() {
   };
 
   return (
-    <div className="site-shell">
+    <div className="site-shell" id="top">
       <LivingBackground />
       <ScrollProgress />
 
       <nav className={`nav ${isScrolled ? 'nav--scrolled' : ''}`} aria-label="Navigation principale">
-        <a className="brand" href="#top" onClick={() => setMobileMenuOpen(false)}>
+        <button className="brand brand--button" type="button" onClick={() => scrollToSection('top')}>
           <img src={assetUrl('assets/icon.png')} alt="Elyrii" className="brand__mark" />
           <span>Elyrii</span>
-        </a>
+        </button>
 
         <div className="nav__links">
           <button onClick={() => scrollToSection('why')}>Pourquoi</button>
@@ -219,7 +219,7 @@ export default function App() {
         </div>
       )}
 
-      <main id="top">
+      <main>
         <section className="hero hero--saas">
           <div className="hero__copy">
             <motion.p
@@ -590,7 +590,10 @@ export default function App() {
           <img src={assetUrl('assets/icon.png')} alt="Elyrii" className="brand__mark" />
           <span>Elyrii</span>
         </div>
-        <p>Un compagnon mobile pour parler, écrire, respirer et avancer à ton rythme.</p>
+        <div className="footer__meta">
+          <p>Un compagnon mobile pour parler, écrire, respirer et avancer à ton rythme.</p>
+          <a href={assetUrl('privacy.html')}>Privacy Policy</a>
+        </div>
       </footer>
     </div>
   );
