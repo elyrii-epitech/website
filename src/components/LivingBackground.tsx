@@ -20,40 +20,54 @@ import { useEffect, useRef, type CSSProperties } from 'react';
  */
 const BLOBS = [
   {
-    color: 'rgba(126, 106, 216, 0.42)',
-    glow: 'rgba(169, 154, 240, 0.55)',
-    size: 620,
+    // Lavande profonde apaisante
+    color: 'rgba(126, 106, 216, 0.38)',
+    glow: 'rgba(169, 154, 240, 0.52)',
+    size: 720,
     top: '-12%',
-    left: '-8%',
-    duration: 22,
+    left: '-6%',
+    duration: 20,
     delay: 0,
   },
   {
-    color: 'rgba(168, 213, 186, 0.38)',
-    glow: 'rgba(194, 227, 210, 0.5)',
-    size: 540,
-    top: '38%',
-    left: '62%',
-    duration: 28,
-    delay: -6,
+    // Menthe douce régénératrice
+    color: 'rgba(168, 213, 186, 0.35)',
+    glow: 'rgba(194, 227, 210, 0.48)',
+    size: 640,
+    top: '32%',
+    left: '64%',
+    duration: 24,
+    delay: -5,
   },
   {
+    // Pêche chaleureuse et réconfortante
     color: 'rgba(255, 181, 168, 0.32)',
     glow: 'rgba(255, 204, 191, 0.45)',
-    size: 480,
-    top: '68%',
-    left: '8%',
-    duration: 26,
-    delay: -12,
+    size: 580,
+    top: '64%',
+    left: '6%',
+    duration: 22,
+    delay: -10,
   },
   {
-    color: 'rgba(123, 195, 147, 0.28)',
-    glow: 'rgba(203, 237, 216, 0.4)',
-    size: 380,
-    top: '6%',
+    // Or doux lumineux
+    color: 'rgba(230, 197, 109, 0.24)',
+    glow: 'rgba(246, 220, 150, 0.38)',
+    size: 520,
+    top: '12%',
     left: '78%',
-    duration: 24,
-    delay: -3,
+    duration: 26,
+    delay: -4,
+  },
+  {
+    // Aurore boréale lavande & menthe en profondeur
+    color: 'rgba(126, 106, 216, 0.28)',
+    glow: 'rgba(168, 213, 186, 0.42)',
+    size: 760,
+    top: '82%',
+    left: '46%',
+    duration: 28,
+    delay: -14,
   },
 ];
 

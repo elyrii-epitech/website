@@ -4,20 +4,87 @@ import { Pause, Play, RefreshCw, Timer, Wind } from 'lucide-react';
 
 type BreatheState = 'idle' | 'inhale' | 'hold-in' | 'exhale' | 'hold-out';
 
-const sequence: Array<{ state: BreatheState; duration: number }> = [
-  { state: 'inhale', duration: 4 },
-  { state: 'hold-in', duration: 2 },
-  { state: 'exhale', duration: 4 },
-  { state: 'hold-out', duration: 2 },
+interface BreathingIntent {
+  id: string;
+  title: string;
+  subtitle: string;
+  emoji: string;
+  benefit: string;
+  sequence: Array<{ state: BreatheState; duration: number }>;
+}
+
+const INTENTS: BreathingIntent[] = [
+  {
+    id: 'coherence',
+    title: 'Équilibre',
+    subtitle: 'Cohérence 5-5',
+    emoji: '⚖️',
+    benefit: 'Régule le rythme cardiaque et apaise le système nerveux',
+    sequence: [
+      { state: 'inhale', duration: 5 },
+      { state: 'exhale', duration: 5 },
+    ],
+  },
+  {
+    id: 'sleep',
+    title: 'Sommeil',
+    subtitle: 'Méthode 4-7-8',
+    emoji: '🌙',
+    benefit: 'Apaisement profond du corps, idéal avant de dormir',
+    sequence: [
+      { state: 'inhale', duration: 4 },
+      { state: 'hold-in', duration: 7 },
+      { state: 'exhale', duration: 8 },
+    ],
+  },
+  {
+    id: 'focus',
+    title: 'Focus',
+    subtitle: 'Respiration 4-4',
+    emoji: '🎯',
+    benefit: 'Clarté mentale immédiate et concentration accrue',
+    sequence: [
+      { state: 'inhale', duration: 4 },
+      { state: 'hold-in', duration: 4 },
+      { state: 'exhale', duration: 4 },
+      { state: 'hold-out', duration: 4 },
+    ],
+  },
+  {
+    id: 'relax',
+    title: 'Détente',
+    subtitle: 'Ventrale 4-2-6',
+    emoji: '🌿',
+    benefit: 'Relâche les tensions abdominales et le diaphragme',
+    sequence: [
+      { state: 'inhale', duration: 4 },
+      { state: 'hold-in', duration: 2 },
+      { state: 'exhale', duration: 6 },
+    ],
+  },
+  {
+    id: 'energy',
+    title: 'Énergie',
+    subtitle: 'Ujjayi 6-6',
+    emoji: '🌊',
+    benefit: 'Ancrage doux du yoga et réchauffement intérieur',
+    sequence: [
+      { state: 'inhale', duration: 6 },
+      { state: 'exhale', duration: 6 },
+    ],
+  },
 ];
 
 export default function InteractiveMeditation() {
+  const [selectedIntentId, setSelectedIntentId] = useState('coherence');
   const [isActive, setIsActive] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(60);
   const [stepIndex, setStepIndex] = useState(0);
 
-  const breatheState = isActive ? sequence[stepIndex].state : 'idle';
-
+  const currentIntent = INTENTS.find((item) => item.id === selectedIntentId) ?? INTENTS[0];
+  const activeSequence = currentIntent.sequence;
+  const currentStep = activeSequence[stepIndex % activeSequence.length];
+  const breatheState = isActive ? currentStep.state : 'idle';
   useEffect(() => {
     if (!isActive) return undefined;
     if (secondsLeft <= 0) {
@@ -36,14 +103,13 @@ export default function InteractiveMeditation() {
   useEffect(() => {
     if (!isActive) return undefined;
 
-    const currentStep = sequence[stepIndex];
-    const timeout = window.setTimeout(() => {
-      setStepIndex((prev) => (prev + 1) % sequence.length);
-    }, currentStep.duration * 1000);
+    const stepDuration = currentStep.duration;
+    const timer = window.setTimeout(() => {
+      setStepIndex((prev) => (prev + 1) % activeSequence.length);
+    }, stepDuration * 1000);
 
-    return () => window.clearTimeout(timeout);
-  }, [isActive, stepIndex]);
-
+    return () => window.clearTimeout(timer);
+  }, [isActive, stepIndex, currentStep, activeSequence.length]);
   const status = useMemo(() => {
     switch (breatheState) {
       case 'inhale':
@@ -60,7 +126,7 @@ export default function InteractiveMeditation() {
   }, [breatheState]);
 
   const circleScale = breatheState === 'inhale' || breatheState === 'hold-in' ? 1.46 : breatheState === 'idle' ? 1.08 : 0.96;
-  const circleColor = breatheState === 'exhale' ? 'var(--accent)' : breatheState === 'hold-in' || breatheState === 'hold-out' ? 'var(--clay)' : 'var(--lavender)';
+  const circleColor = breatheState === 'exhale' ? 'var(--accent)' : breatheState === 'hold-in' || breatheState === 'hold-out' ? 'var(--peach)' : 'var(--lavender)';
 
   const handleStart = () => {
     if (secondsLeft <= 0) setSecondsLeft(60);
@@ -74,26 +140,55 @@ export default function InteractiveMeditation() {
   };
 
   return (
-    <div className="glass-panel" id="meditation-simulator">
+    <div className="glass-panel meditation-simulator-panel" id="meditation-simulator">
       <div className="panel-topline">
         <span className="panel-kicker">
-          <Wind size={18} />
-          Respiration
+          <Wind size={16} />
+          Sanctuaire du Souffle
         </span>
-        <span className="panel-kicker">
-          <Timer size={16} />
+        <span className="panel-kicker panel-kicker--time">
+          <Timer size={15} />
           {secondsLeft}s
         </span>
       </div>
 
-      <h3>Cohérence cardiaque guidée</h3>
-      <p>Un cycle court pour retrouver une cadence respiratoire lisible avant de reprendre la conversation ou le journal.</p>
+      <div className="meditation-intent-header">
+        <div className="meditation-intent-badge">
+          <span className="meditation-intent-badge__emoji">{currentIntent.emoji}</span>
+          <span className="meditation-intent-badge__name">{currentIntent.title}</span>
+          <span className="meditation-intent-badge__sub">{currentIntent.subtitle}</span>
+        </div>
+        <p className="meditation-intent-desc">{currentIntent.benefit}</p>
+      </div>
+
+      {/* Sélecteur des 5 intentions — wrap fluide sans barre de défilement */}
+      <div className="breathing-intents-row" role="tablist" aria-label="Intentions de respiration">
+        {INTENTS.map((intent) => {
+          const isSelected = intent.id === currentIntent.id;
+          return (
+            <button
+              key={intent.id}
+              type="button"
+              role="tab"
+              aria-selected={isSelected}
+              className={`breathing-intent-pill ${isSelected ? 'is-active' : ''}`}
+              onClick={() => {
+                setSelectedIntentId(intent.id);
+                setStepIndex(0);
+              }}
+            >
+              <span>{intent.emoji}</span>
+              <span>{intent.title}</span>
+            </button>
+          );
+        })}
+      </div>
 
       <div className="breathing-circle-outer">
         <motion.div
           animate={{ scale: circleScale, backgroundColor: circleColor }}
           transition={{
-            duration: breatheState === 'inhale' || breatheState === 'exhale' ? 4 : 0.7,
+            duration: breatheState === 'inhale' || breatheState === 'exhale' ? currentStep.duration : 0.7,
             ease: 'easeInOut',
           }}
           className="breathing-circle-inner"
