@@ -35,3 +35,34 @@ test('LivingBackground only runs the cursor halo loop on useful pointer activity
   assert.match(onMoveBody, /ensureHaloFrame\(\)/, 'pointer movement should start the halo loop');
   assert.match(onMoveBody, /scheduleHaloIdleStop\(\)/, 'pointer movement should arm the idle stop');
 });
+
+test('Mascot look-at does not accumulate on a frozen end-of-clip pose', () => {
+  const component = source('src/components/MascotModel.tsx');
+
+  assert.match(component, /mixerHeadQuat/, 'look-at must snapshot the mixer head pose each frame');
+  assert.match(component, /headLookApplied/, 'the mixer pose must be restored before the next mixer update');
+  assert.match(
+    component,
+    /headNode\.quaternion\.copy\(mixerHeadQuat\)\.premultiply\(lookQuat\)/,
+    'look offset must be applied in parent space from the mixer pose, not stacked on last frame',
+  );
+  assert.doesNotMatch(
+    component,
+    /headNode\.quaternion\.multiply\(lookQuat\)/,
+    'in-place multiply on the live head quaternion spins the head when the mixer skips a frozen pose',
+  );
+  assert.match(
+    component,
+    /idleAction\.reset\(\);\s*target\.crossFadeTo\(idleAction/,
+    'idle must be reset before crossFadeTo so the return fade is not cancelled',
+  );
+  const tickBody = /const tick = \(\) => \{[\s\S]*?\n      \};/.exec(component)?.[0] ?? '';
+  const updateAt = tickBody.indexOf('mixer?.update(delta)');
+  const sampleAt = tickBody.indexOf('mixerHeadQuat.copy(headNode.quaternion)');
+  assert.notEqual(updateAt, -1, 'tick must update the mixer');
+  assert.notEqual(sampleAt, -1, 'tick must snapshot CTRL_head after the mixer runs');
+  assert.ok(
+    updateAt < sampleAt,
+    'mixerHeadQuat must be re-sampled after mixer.update so look-at follows animated head motion instead of the clip bind pose',
+  );
+});

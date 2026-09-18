@@ -19,6 +19,23 @@ const ONCE_ANIMATIONS: Record<string, true> = {
   invite: true,
 };
 
+const INTRO_CLIP = 'greet';
+const INTRO_DELAY_MS = 650;
+const AMBIENT_MIN_MS = 9000;
+const AMBIENT_MAX_MS = 16000;
+const AMBIENT_CLIPS = [
+  'curious',
+  'stretch',
+  'nuzzle',
+  'delight',
+  'acknowledge',
+  'invite',
+  'proud',
+  'settle',
+  'cozy',
+  'reassure',
+] as const;
+
 export interface MascotModelProps {
   interactive?: boolean;
   triggerWave?: number;
@@ -81,6 +98,7 @@ export default function MascotModel({
       const actionsMap: Record<string, AnimationAction> = {};
       let activeAction: AnimationAction | null = null;
       let isPlayingOnce = false;
+      let playClip: (rawName: string) => void = () => undefined;
 
       let targetPointerX = 0;
       let targetPointerY = 0;
@@ -89,6 +107,23 @@ export default function MascotModel({
       const baseRotationY = 0.02;
       const lookEuler = new THREE.Euler(0, 0, 0, 'YXZ');
       const lookQuat = new THREE.Quaternion();
+      const mixerHeadQuat = new THREE.Quaternion();
+      let headLookApplied = false;
+
+      let modelReady = false;
+      let sceneVisible = false;
+      let introPlayed = false;
+      let lastAmbientClip = '';
+      let introTimer: ReturnType<typeof window.setTimeout> | null = null;
+      let ambientTimer: ReturnType<typeof window.setTimeout> | null = null;
+
+      const requestedClip = currentAnimation.toLowerCase();
+      const loopingOverride = Boolean(
+        requestedClip &&
+          requestedClip !== 'idle' &&
+          !ONCE_ANIMATIONS[requestedClip],
+      );
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       const onPointerMove = (e: PointerEvent) => {
         const nx = (e.clientX / window.innerWidth) * 2 - 1;
@@ -152,6 +187,97 @@ export default function MascotModel({
       resizeObserver.observe(container);
       resize();
 
+      const clearIntroTimer = () => {
+        if (introTimer !== null) {
+          window.clearTimeout(introTimer);
+          introTimer = null;
+        }
+      };
+
+      const clearAmbientTimer = () => {
+        if (ambientTimer !== null) {
+          window.clearTimeout(ambientTimer);
+          ambientTimer = null;
+        }
+      };
+
+      const canPlayAmbient = () =>
+        !disposed &&
+        !reducedMotion &&
+        !loopingOverride &&
+        modelReady &&
+        sceneVisible &&
+        !document.hidden &&
+        !isPlayingOnce;
+
+      const pickAmbientClip = () => {
+        const available = AMBIENT_CLIPS.filter(
+          (name) => name !== lastAmbientClip && Boolean(actionsMap[name]),
+        );
+        const pool = available.length > 0 ? available : [...AMBIENT_CLIPS];
+        const choice = pool[Math.floor(Math.random() * pool.length)] ?? AMBIENT_CLIPS[0];
+        lastAmbientClip = choice;
+        return choice;
+      };
+
+      const scheduleAmbient = () => {
+        clearAmbientTimer();
+        if (reducedMotion || loopingOverride || disposed) return;
+        const wait = AMBIENT_MIN_MS + Math.random() * (AMBIENT_MAX_MS - AMBIENT_MIN_MS);
+        ambientTimer = window.setTimeout(() => {
+          ambientTimer = null;
+          if (!canPlayAmbient()) {
+            scheduleAmbient();
+            return;
+          }
+          playClip(pickAmbientClip());
+        }, wait);
+      };
+
+      const startPresence = () => {
+        if (disposed || !modelReady || !sceneVisible || document.hidden) return;
+
+        if (loopingOverride) {
+          playClip(requestedClip);
+          return;
+        }
+
+        if (reducedMotion) return;
+
+        if (!introPlayed) {
+          clearIntroTimer();
+          introTimer = window.setTimeout(() => {
+            introTimer = null;
+            introPlayed = true;
+            if (!disposed && sceneVisible && !document.hidden) {
+              playClip(INTRO_CLIP);
+            } else {
+              introPlayed = false;
+            }
+          }, INTRO_DELAY_MS);
+          return;
+        }
+
+        if (!isPlayingOnce) {
+          scheduleAmbient();
+        }
+      };
+
+      const pausePresence = () => {
+        clearIntroTimer();
+        clearAmbientTimer();
+      };
+
+      const onVisibilityChange = () => {
+        if (document.hidden) {
+          pausePresence();
+          return;
+        }
+        startPresence();
+      };
+
+      document.addEventListener('visibilitychange', onVisibilityChange);
+
       const loader = new GLTFLoader();
       loader.load(
         MODEL_URL,
@@ -201,7 +327,7 @@ export default function MascotModel({
             activeAction = idleAction;
           }
 
-          const playClip = (rawName: string) => {
+          playClip = (rawName: string) => {
             if (!mixer || isPlayingOnce) return;
             const name = rawName.toLowerCase();
             const target = actionsMap[name];
@@ -217,6 +343,7 @@ export default function MascotModel({
 
             if (isOnce) {
               isPlayingOnce = true;
+              clearAmbientTimer();
               if (name === 'greet') onWaveTriggered?.();
 
               const onFinished = (event: { action: unknown }) => {
@@ -224,9 +351,13 @@ export default function MascotModel({
                   mixer?.removeEventListener('finished', onFinished);
                   isPlayingOnce = false;
                   if (idleAction) {
+                    idleAction.reset();
                     target.crossFadeTo(idleAction, 0.35, true);
-                    idleAction.reset().play();
+                    idleAction.play();
                     activeAction = idleAction;
+                  }
+                  if (!loopingOverride && !reducedMotion) {
+                    scheduleAmbient();
                   }
                 }
               };
@@ -237,6 +368,8 @@ export default function MascotModel({
           };
 
           playClipRef.current = playClip;
+          modelReady = true;
+          startPresence();
         },
         undefined,
         () => undefined,
@@ -245,6 +378,15 @@ export default function MascotModel({
       const clock = new THREE.Clock();
       const tick = () => {
         const delta = clock.getDelta();
+
+        // Three.js n'écrit un os que si la pose mixer a changé. En fin de clip
+        // (clampWhenFinished) la pose est figée : un multiply in-place accumule
+        // le regard et fait craquer / tourner la tête.
+        if (headLookApplied && headNode) {
+          headNode.quaternion.copy(mixerHeadQuat);
+          headLookApplied = false;
+        }
+
         mixer?.update(delta);
 
         if (followCursor && model) {
@@ -256,32 +398,39 @@ export default function MascotModel({
           model.rotation.y = baseRotationY + currentPointerX * 0.08;
           model.rotation.x = 0;
 
-          // La tête suit le curseur : haut/bas direct et gauche/droite direct
+          // Regard appliqué depuis la pose mixer, en espace parent (ROOT).
           if (headNode) {
+            mixerHeadQuat.copy(headNode.quaternion);
             lookEuler.set(
               currentPointerY * 0.38,
               currentPointerX * 0.5,
-              0
+              0,
             );
             lookQuat.setFromEuler(lookEuler);
-            headNode.quaternion.multiply(lookQuat);
+            headNode.quaternion.copy(mixerHeadQuat).premultiply(lookQuat).normalize();
+            headLookApplied = true;
           }
         }
         renderer.render(scene, camera);
       };
 
       const intersectionObserver = new IntersectionObserver(([entry]) => {
+        sceneVisible = entry.isIntersecting;
         if (entry.isIntersecting) {
           clock.getDelta(); // reset clock delta to avoid sudden time leaps
           renderer.setAnimationLoop(tick);
+          startPresence();
         } else {
           renderer.setAnimationLoop(null);
+          pausePresence();
         }
       }, { threshold: 0.02 });
 
       intersectionObserver.observe(container);
 
       cleanupScene = () => {
+        pausePresence();
+        document.removeEventListener('visibilitychange', onVisibilityChange);
         if (followCursor) {
           window.removeEventListener('pointermove', onPointerMove);
         }
