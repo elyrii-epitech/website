@@ -2,18 +2,14 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
-  BadgeCheck,
   BookOpenText,
   ChevronRight,
   Download,
   HeartPulse,
   Instagram,
-  LockKeyhole,
   Menu,
   MessageCircle,
   Moon,
-  ShieldCheck,
-  Sparkles,
   Trophy,
   Waves,
   X,
@@ -61,41 +57,15 @@ const benefits = [
   },
 ];
 
-const steps = [
-  {
-    title: 'Dis ce que tu ressens',
-    tag: 'Expression libre',
-    copy: 'Choisis ton humeur ou commence une discussion. Elyrii t’aide à mettre de l’ordre dans ce qui est flou, à ton propre rythme.',
-  },
-  {
-    title: 'Transforme en petit geste',
-    tag: 'Action réaliste',
-    copy: 'L’app te propose une action réaliste et déculpabilisante, adaptée à ton état, pas une injonction impossible à tenir.',
-  },
-  {
-    title: 'Garde une trace',
-    tag: 'Progression sereine',
-    copy: 'Tu vois ce qui t’aide vraiment, jour après jour, avec une progression douce sans aucune pression de streak.',
-  },
-];
 
-const trustItems = [
-  {
-    icon: LockKeyhole,
-    title: 'Tes pensées restent privées',
-    copy: 'Elyrii est pensé pour accueillir des moments personnels avec respect et discrétion.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Pas de bruit inutile',
-    copy: 'Pas de fil infini, pas de publicité, pas de mécanique agressive pour te garder captif.',
-  },
-  {
-    icon: BadgeCheck,
-    title: 'Une app faite pour durer',
-    copy: 'Des rituels courts, beaux et faciles à reprendre, même après une période difficile.',
-  },
-];
+const plotActors = [
+  { name: 'Santé Psy Étudiant', x: 24, y: 28, featured: false },
+  { name: 'Togetherall', x: 54, y: 42, featured: false },
+  { name: 'ELYRII', x: 70, y: 22, featured: true },
+  { name: 'Wysa', x: 64, y: 68, featured: false },
+  { name: 'ChatGPT', x: 56, y: 82, featured: false },
+] as const;
+
 export default function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -128,7 +98,7 @@ export default function App() {
         <div className="nav__links">
           <button onClick={() => scrollToSection('why')}>Pourquoi</button>
           <button onClick={() => scrollToSection('features')}>Fonctionnalités</button>
-          <button onClick={() => scrollToSection('trust')}>Confiance</button>
+          <button onClick={() => scrollToSection('positioning')}>Positionnement</button>
         </div>
 
         <a
@@ -159,10 +129,10 @@ export default function App() {
 
       {mobileMenuOpen && (
         <div className="mobile-panel">
-          <button onClick={() => scrollToSection('why')}>Pourquoi Elyrii</button>
+          <button onClick={() => scrollToSection('why')}>Pourquoi</button>
           <button onClick={() => scrollToSection('features')}>Fonctionnalités</button>
-          <button onClick={() => scrollToSection('trust')}>Confiance</button>
-          <button onClick={() => scrollToSection('download')}>Communauté & Instagram</button>
+          <button onClick={() => scrollToSection('positioning')}>Positionnement</button>
+          <button onClick={() => scrollToSection('download')}>Communauté & Téléchargement</button>
           <a
             className="mobile-panel__instagram"
             href="https://www.instagram.com/elyrii.app/"
@@ -186,7 +156,6 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
             >
-              <Sparkles size={16} />
               Ton compagnon bien-être au quotidien
             </motion.p>
 
@@ -287,7 +256,7 @@ export default function App() {
           <Reveal className="section__heading section__heading--split">
             <div>
               <p className="eyebrow">Pourquoi Elyrii</p>
-              <h2>Pour les moments où tu ne sais pas par où commencer.</h2>
+              <h2>Pour les moments où tu ne sais pas par où commencer</h2>
             </div>
             <p>
               Elyrii ne te demande pas d'aller bien tout de suite. L'app t'aide à faire une seule chose simple: poser ce que tu ressens, puis avancer d'un petit pas.
@@ -310,35 +279,10 @@ export default function App() {
           </Stagger>
         </section>
 
-        <section className="section steps-section">
-          <Reveal className="section__heading">
-            <p className="eyebrow">Simple à utiliser</p>
-            <h2>Un rituel en trois temps.</h2>
-            <p>Pas besoin d'un long onboarding. Elyrii se comprend en quelques secondes et revient avec toi chaque jour.</p>
-          </Reveal>
-
-          <Stagger className="steps-grid" stagger={0.14}>
-            {steps.map((step, index) => (
-              <motion.article variants={staggerItem} key={step.title}>
-                <SpotlightCard className="step-card" tiltStrength={8} spotlightColor="rgba(169, 154, 240, 0.22)">
-                  <div className="step-card__top">
-                    <span className="step-card__number">{String(index + 1).padStart(2, '0')}</span>
-                    <span className="step-card__tag">{step.tag}</span>
-                  </div>
-                  <div className="step-card__body">
-                    <h3>{step.title}</h3>
-                    <p>{step.copy}</p>
-                  </div>
-                </SpotlightCard>
-              </motion.article>
-            ))}
-          </Stagger>
-        </section>
-
         <section className="section interactive-section" id="features">
           <Reveal className="section__heading">
             <p className="eyebrow">Dans l'app</p>
-            <h2>Tout ce qu'il faut pour retrouver un peu d'air.</h2>
+            <h2>Tout ce qu'il faut pour retrouver un peu d'air</h2>
             <p>Une expérience bienveillante conçue pour déculpabiliser, apaiser et avancer à ton propre rythme.</p>
           </Reveal>
 
@@ -348,7 +292,7 @@ export default function App() {
                 <MessageCircle size={16} />
                 Coach & Écoute Empathique
               </p>
-              <h3>Parle sans préparer tes phrases.</h3>
+              <h3>Parle sans préparer tes phrases</h3>
               <p>
                 Elyrii accueille tes ressentis sans jugement. Un échange bienveillant en deux temps : accueillir ce qui pèse, puis proposer un micro-geste concret adapté à ton énergie du moment.
               </p>
@@ -367,7 +311,7 @@ export default function App() {
                 <BookOpenText size={16} />
                 Espace de Réflexion
               </p>
-              <h3>Dénoue ce qui pèse, à ton rythme.</h3>
+              <h3>Dénoue ce qui pèse, à ton rythme</h3>
               <p>
                 Suis ta météo intérieure sans tabou, laisse-toi guider par des amorces d'écriture bienveillantes inspirées du Coach, et garde une trace sereine de tes journées.
               </p>
@@ -380,7 +324,7 @@ export default function App() {
                 <Trophy size={16} />
                 Le Jardin Intérieur
               </p>
-              <h3>Le Coach sème, le Jardin fleurit.</h3>
+              <h3>Le Coach sème, le Jardin fleurit</h3>
               <p>
                 Zéro streak anxiogène ni calcul punitif. Des défis quotidiens sur mesure qui arrosent ton jardin intérieur et célèbrent chaque petite victoire par un éveil botanique.
               </p>
@@ -399,7 +343,7 @@ export default function App() {
                 <Waves size={16} />
                 Sanctuaire du Souffle
               </p>
-              <h3>5 respirations thérapeutiques guidées.</h3>
+              <h3>5 respirations thérapeutiques guidées</h3>
               <p>
                 Équilibre cardiaque (5-5), Sommeil réparateur (4-7-8), Focus immédiat (4-4), Détente abdominale (4-2-6) ou Énergie douce (6-6) : choisis ton intention et respire en harmonie avec Elyrii.
               </p>
@@ -407,31 +351,63 @@ export default function App() {
           </Reveal>
         </section>
 
-        <section className="section trust-section" id="trust">
-          <Reveal className="section__heading section__heading--split">
-            <div>
-              <p className="eyebrow">Confiance</p>
-              <h2>Une app douce, pas une machine à notifications.</h2>
+        <section className="market-band" id="positioning" aria-labelledby="market-position-title">
+          <div className="market-band__inner">
+            <div className="market-position">
+              <Reveal>
+                <p className="eyebrow">
+                  <span className="market-band__dash" aria-hidden="true" />
+                  Positionnement
+                </p>
+                <h2 id="market-position-title">Le seul acteur quotidien, étudiant, et connecté au dispositif français</h2>
+              </Reveal>
+              <Reveal className="market-position__layout">
+                <figure className="market-plot">
+                  <figcaption id="market-plot-caption" className="visually-hidden">
+                    Matrice : axe vertical du généraliste au spécifiquement étudiant, axe horizontal du ponctuel au quotidien. Elyrii est le seul acteur dans le quadrant quotidien et spécifiquement étudiant. Santé Psy Étudiant est ponctuel et étudiant. Togetherall est proche du centre, légèrement quotidien et étudiant. Wysa et ChatGPT sont quotidien et généraliste.
+                  </figcaption>
+                  <div className="market-plot__grid" aria-labelledby="market-plot-caption">
+                    <span className="market-plot__axis market-plot__axis--top">Spécifiquement étudiant</span>
+                    <span className="market-plot__axis market-plot__axis--left">Ponctuel</span>
+                    <div className="market-plot__frame">
+                      <div className="market-plot__cell" />
+                      <div className="market-plot__cell market-plot__cell--focus" />
+                      <div className="market-plot__cell" />
+                      <div className="market-plot__cell" />
+                      {plotActors.map((actor) => (
+                        <span
+                          key={actor.name}
+                          className={actor.featured ? 'market-plot__pill market-plot__pill--elyrii' : 'market-plot__pill'}
+                          style={{ left: `${actor.x}%`, top: `${actor.y}%` }}
+                        >
+                          {actor.name}
+                        </span>
+                      ))}
+                    </div>
+                    <span className="market-plot__axis market-plot__axis--right">Quotidien</span>
+                    <span className="market-plot__axis market-plot__axis--bottom">Généraliste</span>
+                  </div>
+                </figure>
+                <div className="market-position__aside">
+                  <div className="market-criterion">
+                    <p className="market-criterion__kicker">3e critère</p>
+                    <h3>Isolé ↔ Connecté au dispositif national</h3>
+                    <p>Elyrii est le seul du bon côté : relais vers le 3114, Santé Psy Étudiant et Nightline.</p>
+                  </div>
+                  <ul className="market-legend">
+                    <li>
+                      <span className="market-legend__swatch market-legend__swatch--elyrii" aria-hidden="true" />
+                      Quotidien + étudiant + connecté
+                    </li>
+                    <li>
+                      <span className="market-legend__swatch" aria-hidden="true" />
+                      Acteurs existants
+                    </li>
+                  </ul>
+                </div>
+              </Reveal>
             </div>
-            <p>
-              Elyrii est pensée pour être utile dans les moments sensibles: claire, discrète, sans pression et centrée sur ton rythme.
-            </p>
-          </Reveal>
-
-          <Stagger className="trust-grid" stagger={0.12}>
-            {trustItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <motion.article variants={staggerItem} key={item.title}>
-                  <SpotlightCard className="trust-card" tiltStrength={5} spotlightColor="rgba(168, 213, 186, 0.16)">
-                    <Icon size={22} />
-                    <h3>{item.title}</h3>
-                    <p>{item.copy}</p>
-                  </SpotlightCard>
-                </motion.article>
-              );
-            })}
-          </Stagger>
+          </div>
         </section>
 
         <section className="section final-hub-section" id="download">
@@ -439,10 +415,9 @@ export default function App() {
             <div className="final-hub-card">
               <div className="final-hub-copy">
                 <p className="eyebrow">
-                  <Sparkles size={16} />
                   Ton rituel commence ici
                 </p>
-                <h2>Retrouve ton calme dès ce soir.</h2>
+                <h2>Retrouve ton calme dès ce soir</h2>
                 <p>
                   Installe Elyrii pour parler, écrire et respirer à ton rythme. Rejoins aussi notre communauté sur Instagram pour échanger directement avec nous en message privé.
                 </p>

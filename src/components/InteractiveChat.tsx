@@ -32,6 +32,27 @@ const PRESET_CONVERSATIONS = {
     ],
   },
 };
+function delay(ms: number): Promise<void> {
+  const { promise, resolve } = Promise.withResolvers<void>();
+  window.setTimeout(resolve, ms);
+  return promise;
+}
+
+
+const GENERIC_RESPONSES = [
+  [
+    'Merci de déposer cela ici. C’est déjà un premier pas d’oser mettre des mots dessus sans te juger.',
+    'Prends une minute pour relâcher tes épaules et respirer doucement. On avance ensemble, à ton rythme.',
+  ],
+  [
+    'Je t’écoute. Ce que tu ressens a toute sa place ici, sans filtre ni besoin d’en faire trop.',
+    'Si tu le souhaites, pose simplement une pensée brute dans ton journal ou bois un verre d’eau pour revenir au présent.',
+  ],
+  [
+    'C’est tout à fait normal de ressentir cela. Ne porte pas tout d’un coup sur tes épaules.',
+    'Je te propose un micro-geste : une respiration lente de 60 secondes pour laisser retomber la pression.',
+  ],
+];
 
 export default function InteractiveChat() {
   const [messages, setMessages] = useState<Message[]>([
@@ -41,11 +62,12 @@ export default function InteractiveChat() {
       text: 'Bonsoir. Je suis Elyrii. Tu peux commencer par une pensée brute, je m’occupe du rythme.',
     },
   ]);
+  const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [activePrompt, setActivePrompt] = useState<keyof typeof PRESET_CONVERSATIONS | null>(null);
   const [isBlinking, setIsBlinking] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-
+  const responseIndexRef = useRef(0);
   useEffect(() => {
     const blinkInterval = window.setInterval(() => {
       setIsBlinking(true);
@@ -73,15 +95,35 @@ export default function InteractiveChat() {
     setMessages((prev) => [...prev, { id: `${Date.now()}-user`, sender: 'user', text: conversation.user }]);
     setIsTyping(true);
 
-    await new Promise((resolve) => window.setTimeout(resolve, 900));
+    await delay(900);
     setMessages((prev) => [...prev, { id: `${Date.now()}-ai-1`, sender: 'ai', text: conversation.replies[0] }]);
 
-    await new Promise((resolve) => window.setTimeout(resolve, 1100));
+    await delay(1100);
     setMessages((prev) => [...prev, { id: `${Date.now()}-ai-2`, sender: 'ai', text: conversation.replies[1] }]);
     setIsTyping(false);
     setActivePrompt(null);
   };
 
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = inputText.trim();
+    if (!trimmed || isTyping) return;
+
+    const userMsgId = `${Date.now()}-user`;
+    setMessages((prev) => [...prev, { id: userMsgId, sender: 'user', text: trimmed }]);
+    setInputText('');
+    setIsTyping(true);
+
+    const currentPair = GENERIC_RESPONSES[responseIndexRef.current % GENERIC_RESPONSES.length];
+    responseIndexRef.current += 1;
+
+    await delay(900);
+    setMessages((prev) => [...prev, { id: `${Date.now()}-ai-1`, sender: 'ai', text: currentPair[0] }]);
+
+    await delay(1000);
+    setMessages((prev) => [...prev, { id: `${Date.now()}-ai-2`, sender: 'ai', text: currentPair[1] }]);
+    setIsTyping(false);
+  };
   return (
     <div className="phone-mockup" id="chat-simulator-phone">
       <div className="phone-screen">
@@ -140,13 +182,20 @@ export default function InteractiveChat() {
             </button>
           </div>
 
-          <div className="chat-input-shell">
+          <form onSubmit={handleSendMessage} className="chat-input-shell">
             <Smile size={16} aria-hidden="true" />
-            <input type="text" placeholder="Écrire à Elyrii..." disabled />
-            <button type="button" disabled aria-label="Envoyer le message">
+            <input
+              type="text"
+              placeholder="Écrire à Elyrii..."
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              disabled={isTyping}
+              aria-label="Message pour Elyrii"
+            />
+            <button type="submit" disabled={!inputText.trim() || isTyping} aria-label="Envoyer le message">
               <Send size={15} />
             </button>
-          </div>
+          </form>
         </div>
       </div>
     </div>
