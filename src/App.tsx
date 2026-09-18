@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -6,22 +6,18 @@ import {
   BookOpenText,
   ChevronRight,
   Download,
-  Flame,
   HeartPulse,
+  Instagram,
   LockKeyhole,
-  Mail,
   Menu,
   MessageCircle,
   Moon,
-  Send,
   ShieldCheck,
   Sparkles,
   Trophy,
-  UsersRound,
   Waves,
   X,
 } from 'lucide-react';
-
 import InteractiveChat from './components/InteractiveChat';
 import InteractiveJournal from './components/InteractiveJournal';
 import InteractiveMeditation from './components/InteractiveMeditation';
@@ -40,36 +36,6 @@ const promiseCards = [
   { value: 'Parle', label: 'quand tu as besoin de poser ce que tu ressens' },
   { value: 'Écris', label: 'pour comprendre tes journées sans te juger' },
   { value: 'Respire', label: 'avec des exercices courts quand ça monte' },
-];
-
-const sliderItems = [
-  {
-    mood: 'Tendu',
-    kicker: 'Rituel proposé',
-    title: 'Écrire trois lignes sur ce qui a pesé aujourd’hui.',
-    primaryMetric: '7 jours',
-    primaryLabel: 'de continuité',
-    secondaryMetric: '4 min',
-    secondaryLabel: 'pour souffler',
-  },
-  {
-    mood: 'Fatigué',
-    kicker: 'Pause courte',
-    title: 'Lancer une respiration guidée avant de reprendre le fil.',
-    primaryMetric: '60 sec',
-    primaryLabel: 'pour ralentir',
-    secondaryMetric: '1 geste',
-    secondaryLabel: 'à faire maintenant',
-  },
-  {
-    mood: 'Stable',
-    kicker: 'Petit progrès',
-    title: 'Valider une action douce et garder la trace de ce qui aide.',
-    primaryMetric: '+40 XP',
-    primaryLabel: 'sans pression',
-    secondaryMetric: '3 notes',
-    secondaryLabel: 'dans le journal',
-  },
 ];
 
 const benefits = [
@@ -98,15 +64,18 @@ const benefits = [
 const steps = [
   {
     title: 'Dis ce que tu ressens',
-    copy: 'Choisis ton humeur ou commence une discussion. Elyrii t’aide à mettre de l’ordre dans ce qui est flou.',
+    tag: 'Expression libre',
+    copy: 'Choisis ton humeur ou commence une discussion. Elyrii t’aide à mettre de l’ordre dans ce qui est flou, à ton propre rythme.',
   },
   {
     title: 'Transforme en petit geste',
-    copy: 'L’app te propose une action réaliste, pas une injonction impossible à tenir.',
+    tag: 'Action réaliste',
+    copy: 'L’app te propose une action réaliste et déculpabilisante, adaptée à ton état, pas une injonction impossible à tenir.',
   },
   {
     title: 'Garde une trace',
-    copy: 'Tu vois ce qui t’aide vraiment, jour après jour, avec une progression douce.',
+    tag: 'Progression sereine',
+    copy: 'Tu vois ce qui t’aide vraiment, jour après jour, avec une progression douce sans aucune pression de streak.',
   },
 ];
 
@@ -127,14 +96,9 @@ const trustItems = [
     copy: 'Des rituels courts, beaux et faciles à reprendre, même après une période difficile.',
   },
 ];
-
 export default function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [isPreviewVisible, setIsPreviewVisible] = useState(true);
-  const previewRef = useRef<HTMLDivElement>(null);
-  const activeSliderItem = sliderItems[activeSlide];
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 24);
@@ -142,28 +106,6 @@ export default function App() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  useEffect(() => {
-    const preview = previewRef.current;
-    if (!preview) return undefined;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setIsPreviewVisible(entry.isIntersecting),
-      { threshold: 0.28 },
-    );
-    observer.observe(preview);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!isPreviewVisible) return undefined;
-
-    const interval = window.setInterval(() => {
-      setActiveSlide((current) => (current + 1) % sliderItems.length);
-    }, 3600);
-
-    return () => window.clearInterval(interval);
-  }, [isPreviewVisible]);
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -179,7 +121,7 @@ export default function App() {
 
       <nav className={`nav ${isScrolled ? 'nav--scrolled' : ''}`} aria-label="Navigation principale">
         <button className="brand brand--button" type="button" onClick={() => scrollToSection('top')}>
-          <img src={assetUrl('assets/icon.png')} alt="Elyrii" className="brand__mark" />
+          <img src={assetUrl('assets/logo_app.png')} alt="Elyrii" className="brand__mark" />
           <span>Elyrii</span>
         </button>
 
@@ -189,10 +131,16 @@ export default function App() {
           <button onClick={() => scrollToSection('trust')}>Confiance</button>
         </div>
 
-        <button className="nav__join" onClick={() => scrollToSection('join')}>
-          <UsersRound size={16} />
-          Nous rejoindre
-        </button>
+        <a
+          className="nav__join"
+          href="https://www.instagram.com/elyrii.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Rejoindre Elyrii sur Instagram"
+        >
+          <Instagram size={15} />
+          <span>Instagram</span>
+        </a>
 
         <MagneticButton className="nav__cta" onClick={() => scrollToSection('download')} strength={14}>
           <Download size={16} />
@@ -205,7 +153,7 @@ export default function App() {
           aria-expanded={mobileMenuOpen}
           onClick={() => setMobileMenuOpen((open) => !open)}
         >
-          {mobileMenuOpen ? <X size={21} /> : <Menu size={21} />}
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </nav>
 
@@ -214,7 +162,17 @@ export default function App() {
           <button onClick={() => scrollToSection('why')}>Pourquoi Elyrii</button>
           <button onClick={() => scrollToSection('features')}>Fonctionnalités</button>
           <button onClick={() => scrollToSection('trust')}>Confiance</button>
-          <button onClick={() => scrollToSection('join')}>Nous rejoindre</button>
+          <button onClick={() => scrollToSection('download')}>Communauté & Instagram</button>
+          <a
+            className="mobile-panel__instagram"
+            href="https://www.instagram.com/elyrii.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            <Instagram size={16} />
+            <span>@elyrii.app sur Instagram</span>
+          </a>
           <button className="mobile-panel__cta" onClick={() => scrollToSection('download')}>Télécharger l’app</button>
         </div>
       )}
@@ -274,7 +232,7 @@ export default function App() {
               </MagneticButton>
               <MagneticButton
                 className="button button--quiet"
-                onClick={() => scrollToSection('join')}
+                onClick={() => scrollToSection('download')}
                 strength={14}
               >
                 Nous rejoindre
@@ -305,70 +263,22 @@ export default function App() {
             </motion.div>
           </div>
 
-          <ParallaxLayer className="hero__stage" speed={-40}>
+          <ParallaxLayer className="hero__stage" speed={-20}>
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, y: 30 }}
+              className="hero__giant-mascot-stage"
+              initial={{ opacity: 0, scale: 0.9, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+              transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
             >
-              <div className="phone-showcase" id="preview" ref={previewRef}>
-              <div className="phone-showcase__top">
-                <div>
-                  <span className="mini-label">Ce soir</span>
-                  <h2>Bonsoir</h2>
-                </div>
-                <div className="phone-presence phone-presence--glb" aria-hidden="true">
-                  <MascotModel />
-                </div>
-              </div>
-
-              <div className="mood-strip" aria-label="Sélecteur d’humeur">
-                {['Calme', 'Tendu', 'Fatigué', 'Stable'].map((mood) => (
-                  <span className={mood === activeSliderItem.mood ? 'is-active' : ''} key={mood}>
-                    {mood}
-                  </span>
-                ))}
-              </div>
-
-              <div className="ritual-slider" aria-label="Aperçu des rituels Elyrii">
-                <div className="ritual-slider__track" style={{ transform: `translate3d(-${activeSlide * 100}%, 0, 0)` }}>
-                  {sliderItems.map((item, index) => (
-                    <article className={`daily-card ritual-slide ${index === activeSlide ? 'is-active' : ''}`} key={item.title}>
-                      <div>
-                        <span className="mini-label">{item.kicker}</span>
-                        <p>{item.title}</p>
-                      </div>
-                      <ChevronRight size={20} />
-                    </article>
-                  ))}
-                </div>
-              </div>
-
-              <div className="slider-dots" aria-label="Contrôles du slider">
-                {sliderItems.map((item, index) => (
-                  <button
-                    key={item.title}
-                    className={index === activeSlide ? 'is-active' : ''}
-                    type="button"
-                    aria-label={`Afficher ${item.kicker}`}
-                    onClick={() => setActiveSlide(index)}
-                  />
-                ))}
-              </div>
-
-              <div className="screen-grid">
-                <div key={`primary-${activeSlide}`}>
-                  <Flame size={18} />
-                  <strong>{activeSliderItem.primaryMetric}</strong>
-                  <span>{activeSliderItem.primaryLabel}</span>
-                </div>
-                <div key={`secondary-${activeSlide}`}>
-                  <HeartPulse size={18} />
-                  <strong>{activeSliderItem.secondaryMetric}</strong>
-                  <span>{activeSliderItem.secondaryLabel}</span>
-                </div>
-              </div>
-            </div>
+              <MascotModel
+                interactive
+                followCursor={true}
+                cameraY={0.02}
+                cameraDistance={4.8}
+                scaleFactor={0.88}
+                className="hero__mascot-giant"
+                ariaLabel="Mascotte 3D Elyrii"
+              />
             </motion.div>
           </ParallaxLayer>
         </section>
@@ -410,10 +320,15 @@ export default function App() {
           <Stagger className="steps-grid" stagger={0.14}>
             {steps.map((step, index) => (
               <motion.article variants={staggerItem} key={step.title}>
-                <SpotlightCard className="step-card" tiltStrength={6} spotlightColor="rgba(255, 181, 168, 0.16)">
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                  <h3>{step.title}</h3>
-                  <p>{step.copy}</p>
+                <SpotlightCard className="step-card" tiltStrength={8} spotlightColor="rgba(169, 154, 240, 0.22)">
+                  <div className="step-card__top">
+                    <span className="step-card__number">{String(index + 1).padStart(2, '0')}</span>
+                    <span className="step-card__tag">{step.tag}</span>
+                  </div>
+                  <div className="step-card__body">
+                    <h3>{step.title}</h3>
+                    <p>{step.copy}</p>
+                  </div>
                 </SpotlightCard>
               </motion.article>
             ))}
@@ -424,17 +339,19 @@ export default function App() {
           <Reveal className="section__heading">
             <p className="eyebrow">Dans l'app</p>
             <h2>Tout ce qu'il faut pour retrouver un peu d'air.</h2>
-            <p>Les fonctionnalités principales sont montrées comme elles doivent être ressenties: simples, utiles, rassurantes.</p>
+            <p>Une expérience bienveillante conçue pour déculpabiliser, apaiser et avancer à ton propre rythme.</p>
           </Reveal>
 
           <Reveal className="showcase showcase--chat">
             <div className="showcase__copy">
               <p className="eyebrow">
                 <MessageCircle size={16} />
-                Discussion
+                Coach & Écoute Empathique
               </p>
               <h3>Parle sans préparer tes phrases.</h3>
-              <p>Elyrii accueille tes messages, t'aide à clarifier ce qui se passe et te propose un prochain geste doux.</p>
+              <p>
+                Elyrii accueille tes ressentis sans jugement. Un échange bienveillant en deux temps : accueillir ce qui pèse, puis proposer un micro-geste concret adapté à ton énergie du moment.
+              </p>
             </div>
             <ParallaxLayer speed={-28}>
               <InteractiveChat />
@@ -448,10 +365,12 @@ export default function App() {
             <div className="showcase__copy">
               <p className="eyebrow">
                 <BookOpenText size={16} />
-                Journal
+                Espace de Réflexion
               </p>
-              <h3>Garde une trace de ce qui compte.</h3>
-              <p>Tu notes ton humeur, tu écris quelques lignes, et tu construis une mémoire plus claire de tes journées.</p>
+              <h3>Dénoue ce qui pèse, à ton rythme.</h3>
+              <p>
+                Suis ta météo intérieure sans tabou, laisse-toi guider par des amorces d'écriture bienveillantes inspirées du Coach, et garde une trace sereine de tes journées.
+              </p>
             </div>
           </Reveal>
 
@@ -459,10 +378,12 @@ export default function App() {
             <div className="showcase__copy">
               <p className="eyebrow">
                 <Trophy size={16} />
-                Défis
+                Le Jardin Intérieur
               </p>
-              <h3>Transforme le mieux-être en petites actions.</h3>
-              <p>Des défis courts t'aident à reprendre une dynamique sans pression ni comparaison.</p>
+              <h3>Le Coach sème, le Jardin fleurit.</h3>
+              <p>
+                Zéro streak anxiogène ni calcul punitif. Des défis quotidiens sur mesure qui arrosent ton jardin intérieur et célèbrent chaque petite victoire par un éveil botanique.
+              </p>
             </div>
             <ParallaxLayer speed={-28}>
               <InteractiveQuests />
@@ -476,10 +397,12 @@ export default function App() {
             <div className="showcase__copy">
               <p className="eyebrow">
                 <Waves size={16} />
-                Respiration
+                Sanctuaire du Souffle
               </p>
-              <h3>Reviens au calme en une minute.</h3>
-              <p>Une bulle de respiration te guide quand le stress monte et que tu as besoin de ralentir.</p>
+              <h3>5 respirations thérapeutiques guidées.</h3>
+              <p>
+                Équilibre cardiaque (5-5), Sommeil réparateur (4-7-8), Focus immédiat (4-4), Détente abdominale (4-2-6) ou Énergie douce (6-6) : choisis ton intention et respire en harmonie avec Elyrii.
+              </p>
             </div>
           </Reveal>
         </section>
@@ -511,88 +434,88 @@ export default function App() {
           </Stagger>
         </section>
 
-        <section className="section join-section" id="join">
+        <section className="section final-hub-section" id="download">
           <Reveal>
-            <div className="join-panel">
-              <div className="join-panel__copy">
+            <div className="final-hub-card">
+              <div className="final-hub-copy">
                 <p className="eyebrow">
-                  <UsersRound size={16} />
-                  Nous rejoindre
+                  <Sparkles size={16} />
+                  Ton rituel commence ici
                 </p>
-                <h2>Construis la suite d'Elyrii avec nous.</h2>
+                <h2>Retrouve ton calme dès ce soir.</h2>
                 <p>
-                  Tu peux rejoindre la liste beta, proposer un partenariat ou contacter l'équipe. Les accès arrivent progressivement.
+                  Installe Elyrii pour parler, écrire et respirer à ton rythme. Rejoins aussi notre communauté sur Instagram pour échanger directement avec nous en message privé.
                 </p>
+
+                <div className="final-hub-actions">
+                  <div className="store-row">
+                    <MagneticButton className="store-button" ariaLabel="Télécharger Elyrii sur App Store" strength={12}>
+                      <Moon size={18} />
+                      <span>
+                        <small>Télécharger sur</small>
+                        App Store
+                      </span>
+                    </MagneticButton>
+                    <MagneticButton className="store-button" ariaLabel="Télécharger Elyrii sur Google Play" strength={12}>
+                      <Download size={18} />
+                      <span>
+                        <small>Télécharger sur</small>
+                        Google Play
+                      </span>
+                    </MagneticButton>
+                  </div>
+
+                  <a
+                    href="https://www.instagram.com/elyrii.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="final-hub-instagram"
+                    aria-label="Rejoindre la communauté Elyrii sur Instagram"
+                  >
+                    <Instagram size={20} className="final-hub-instagram-icon" />
+                    <div className="final-hub-instagram-text">
+                      <small>Communauté officielle</small>
+                      <strong>Écris-nous en DM sur @elyrii.app</strong>
+                    </div>
+                    <ArrowRight size={16} className="final-hub-arrow" />
+                  </a>
+                </div>
               </div>
 
-              <Stagger className="join-actions" aria-label="Contacts Elyrii" stagger={0.1}>
-                <motion.button type="button" className="join-action" variants={staggerItem}>
-                  <Mail size={18} />
-                  <span>
-                    <small>Contact</small>
-                    hello@elyrii.app
-                  </span>
-                </motion.button>
-                <motion.button type="button" className="join-action" variants={staggerItem}>
-                  <UsersRound size={18} />
-                  <span>
-                    <small>Beta privée</small>
-                    Rejoindre la liste
-                  </span>
-                </motion.button>
-                <motion.button type="button" className="join-action join-action--accent" variants={staggerItem}>
-                  <Send size={18} />
-                  <span>
-                    <small>Partenariats</small>
-                    partner@elyrii.app
-                  </span>
-                </motion.button>
-              </Stagger>
+              <div className="final-hub-mascot">
+                <MascotModel
+                  cameraDistance={4.9}
+                  cameraY={0.06}
+                  scaleFactor={0.92}
+                  currentAnimation="breathe"
+                  ariaLabel="Mascotte 3D Elyrii"
+                />
+              </div>
             </div>
           </Reveal>
-        </section>
-
-        <section className="download" id="download">
-          <Reveal className="download__content">
-            <p className="eyebrow">
-              <BadgeCheck size={16} />
-              Télécharger Elyrii
-            </p>
-            <h2>Commence par un petit rituel ce soir.</h2>
-            <p>
-              Installe Elyrii et garde un compagnon calme dans ta poche pour parler, écrire, respirer et avancer à ton rythme.
-            </p>
-            <div className="store-row">
-              <MagneticButton className="store-button" ariaLabel="Télécharger Elyrii sur App Store" strength={12}>
-                <Moon size={18} />
-                <span>
-                  <small>Télécharger sur</small>
-                  App Store
-                </span>
-              </MagneticButton>
-              <MagneticButton className="store-button" ariaLabel="Télécharger Elyrii sur Google Play" strength={12}>
-                <Download size={18} />
-                <span>
-                  <small>Télécharger sur</small>
-                  Google Play
-                </span>
-              </MagneticButton>
-            </div>
-          </Reveal>
-          <ParallaxLayer className="download-mascot-model" speed={30}>
-            <MascotModel />
-          </ParallaxLayer>
         </section>
       </main>
 
       <footer className="footer">
         <div className="brand">
-          <img src={assetUrl('assets/icon.png')} alt="Elyrii" className="brand__mark" />
+          <img src={assetUrl('assets/logo_app.png')} alt="Elyrii" className="brand__mark" />
           <span>Elyrii</span>
         </div>
         <div className="footer__meta">
-          <p>Un compagnon mobile pour parler, écrire, respirer et avancer à ton rythme.</p>
-          <a href={assetUrl('privacy.html')}>Privacy Policy</a>
+          <p>Un compagnon mobile pour parler, écrire et respirer.</p>
+          <div className="footer__links">
+            <a
+              href="https://www.instagram.com/elyrii.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer__instagram-link"
+            >
+              <Instagram size={15} />
+              <span>@elyrii.app</span>
+            </a>
+            <span className="footer__sep">·</span>
+            <a href={assetUrl('privacy.html')}>Privacy Policy</a>
+          </div>
         </div>
       </footer>
     </div>
